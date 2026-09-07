@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おそばにアプリ - 介護記録・受診サポート</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#4A7C6F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="おそばに">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #4A7C6F;
+    --primary-light: #6BAF9F;
+    --primary-pale: #E8F4F1;
+    --accent: #E8956D;
+    --accent-light: #F5C4A8;
+    --accent-pale: #FDF3EC;
+    --warm: #F7F3EE;
+    --text: #2D3436;
+    --text-mid: #636E72;
+    --text-light: #B2BEC3;
+    --white: #FFFFFF;
+    --card-shadow: 0 4px 20px rgba(74,124,111,0.12);
+    --card-shadow-hover: 0 8px 32px rgba(74,124,111,0.2);
+    --radius: 20px;
+    --radius-sm: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--warm);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ===== PHONE FRAME ===== */
+  .phone-frame {
+    width: 390px;
+    min-height: 100vh;
+    background: var(--warm);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: var(--primary);
+    padding: 52px 24px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -30px; left: 40px;
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 50%;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .app-name {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--white);
+    letter-spacing: 2px;
+  }
+
+  .app-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+    letter-spacing: 1px;
+  }
+
+  .header-avatar {
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .user-info {
+    background: rgba(255,255,255,0.12);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-icon {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .user-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .user-rel {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+  }
+
+  .next-visit {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .next-visit-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .next-visit-date {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-light);
+  }
+
+  /* ===== TABS ===== */
+  .tabs {
+    background: var(--white);
+    display: flex;
+    border-bottom: 2px solid var(--primary-pale);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 14px 8px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-light);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 700;
+  }
+
+  .tab-icon { font-size: 18px; }
+
+  /* ===== CONTENT ===== */
+  .content {
+    flex: 1;
+    padding: 20px 16px 100px;
+    overflow-y: auto;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ===== SECTION TITLE ===== */
+  .section-title {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--primary-pale);
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--card-shadow);
+    transition: box-shadow 0.2s;
+  }
+
+  .card:hover { box-shadow: var(--card-shadow-hover); }
+
+  /* ===== STATUS CARDS ===== */
+  .status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .status-card {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .status-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+
+  .status-label {
+    font-size: 11px;
+    color: var(--text-mid);
+    font-weight: 500;
+  }
+
+  .status-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .status-unit {
+    font-size: 11px;
+    color: var(--text-mid);
+  }
+
+  .status-time {
+    font-size: 10px;
+    color: var(--text-light);
+  }
+
+  .status-good { color: var(--primary); }
+  .status-warn { color: var(--accent); }
+
+  /* ===== CONDITION SELECTOR ===== */
+  .condition-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 8px 0;
+  }
+
+  .condition-btn {
+    padding: 10px 16px;
+    border-radius: 100px;
+    border: 2px solid var(--primary-pale);
+    background: var(--white);
+    font-size: 14px;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-mid);
+    font-weight: 500;
+  }
+
+  .condition-btn.selected {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+  }
+
+  .condition-btn.selected-warn {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--white);
+  }
+
+  /* ===== INPUT FIELDS ===== */
+  .input-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-mid);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--primary-pale);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--primary-pale);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    resize: none;
+  }
+
+  .input-field:focus {
+    border-color: var(--primary);
+    background: var(--white);
+  }
+
+  .input-group { margin-bottom: 16px; }
+
+  /* ===== VITAL INPUT ===== */
+  .vital-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .vital-input-card {
+    background: var(--primary-pale);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+  }
+
+  .vital-input-label {
+    font-size: 11px;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .vital-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--primary-light);
+    padding: 4px 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    outline: none;
+  }
+
+  .vital-unit {
+    font-size: 11px;
+    color: var(--text-mid);
+    margin-top: 4px;
+  }
+
+  /* ===== SUBMIT BUTTON ===== */
+  .btn-primary {
+    width: 100%;
+    padding: 18px;
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(74,124,111,0.3);
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(74,124,111,0.4);
+  }
+
+  .btn-accent {
+    background: var(--accent);
+    box-shadow: 0 4px 16px rgba(232,149,109,0.3);
+  }
+
+  .btn-accent:hover {
+    background: #d4825a;
+    box-shadow: 0 8px 24px rgba(232,149,109,0.4);
+  }
+
+  /* ===== TIMELINE ===== */
+  .timeline { position: relative; }
+
+  .timeline-item {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 36px;
+    bottom: -20px;
+    width: 2px;
+    background: var(--primary-pale);
+  }
+
+  .timeline-item:last-child::before { display: none; }
+
+  .timeline-dot {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    z-index: 1;
+  }
+
+  .dot-green { background: var(--primary-pale); }
+  .dot-orange { background: var(--accent-pale); }
+  .dot-gray { background: #F0F0F0; }
+
+  .timeline-content {
+    flex: 1;
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    box-shadow: var(--card-shadow);
+  }
+
+  .timeline-date {
+    font-size: 11px;
+    color: var(--text-light);
+    margin-bottom: 4px;
+  }
+
+  .timeline-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .timeline-text {
+    font-size: 13px;
+    color: var(--text-mid);
+    line-height: 1.6;
+  }
+
+  .timeline-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 8px;
+  }
+
+  .tag-green { background: var(--primary-pale); color: var(--primary); }
+  .tag-orange { background: var(--accent-pale); color: var(--accent); }
+
+  /* ===== REPORT CARD ===== */
+  .report-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 16px;
+  }
+
+  .report-header {
+    background: var(--primary);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .report-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .report-date {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .report-body { padding: 16px 20px; }
+
+  .report-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+  }
+
+  .report-icon {
+    width: 32px; height: 32px;
+    background: var(--primary-pale);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .report-content { flex: 1; }
+
+  .report-key {
+    font-size: 11px;
+    color: var(--text-mid);
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .report-val {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* ===== NOTIFICATION BADGE ===== */
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    margin-left: 6px;
+  }
+
+  /* ===== SUCCESS MODAL ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .modal-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 36px 28px;
+    text-align: center;
+    width: 300px;
+    transform: scale(0.8);
+    transition: transform 0.3s;
+  }
+
+  .modal-overlay.show .modal {
+    transform: scale(1);
+  }
+
+  .modal-icon {
+    font-size: 56px;
+    margin-bottom: 16px;
+  }
+
+  .modal-title {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--primary);
+    margin-bottom: 10px;
+  }
+
+  .modal-text {
+    font-size: 13px;
+    color: var(--text-mid);
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+
+  .btn-modal {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+  }
+
+  /* ===== NOTICE BANNER ===== */
+  .notice {
+    background: var(--accent-pale);
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .notice-icon { font-size: 18px; flex-shrink: 0; }
+  .notice-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+  .notice-bold { font-weight: 700; }
+
+  /* ===== MEMBER SHARE ===== */
+  .share-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 8px 0;
+  }
+
+  .share-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--primary-pale);
+    border-radius: 100px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--primary);
+  }
+
+  .share-chip-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+
+  /* ===== BOTTOM NAV ===== */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    width: 390px;
+    background: var(--white);
+    border-top: 1px solid var(--primary-pale);
+    display: flex;
+    padding: 8px 0 20px;
+    z-index: 20;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  }
+
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s;
+  }
+
+  .nav-icon { font-size: 22px; }
+  .nav-label { font-size: 10px; color: var(--text-light); font-weight: 500; }
+  .nav-item.active .nav-label { color: var(--primary); font-weight: 700; }
+
+  .nav-center {
+    position: relative;
+    margin-top: -24px;
+  }
+
+  .nav-center-btn {
+    width: 56px; height: 56px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 16px rgba(74,124,111,0.4);
+    cursor: pointer;
+  }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .screen.active { animation: fadeIn 0.3s ease; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--primary-pale); border-radius: 4px; }
+
+  /* ===== v1.1 追加スタイル ===== */
+  .phone-frame { width: 100%; max-width: 390px; }
+  .next-visit { white-space: nowrap; }
+  .next-visit-date { font-size: 12px; }
+  .bottom-nav { width: 100%; max-width: 390px; }
+  .header { padding-top: max(52px, env(safe-area-inset-top, 52px)); }
+  .settings-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--primary-pale);
+  }
+  .settings-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .settings-desc { font-size: 11px; color: var(--text-mid); margin-top: 2px; line-height: 1.5; }
+  .switch { position: relative; display: inline-block; width: 46px; height: 26px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; inset: 0; background: var(--primary-pale); border-radius: 100px; transition: background 0.25s; }
+  .slider::before { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%; left: 3px; top: 3px; background: var(--white); box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: transform 0.25s; }
+  .switch input:checked + .slider { background: var(--primary); }
+  .switch input:checked + .slider::before { transform: translateX(20px); }
+  .btn-secondary {
+    width: 100%; padding: 14px; background: var(--white); color: var(--primary);
+    border: 2px solid var(--primary-pale); border-radius: var(--radius); font-size: 14px; font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 10px;
+  }
+  .btn-secondary:hover { border-color: var(--primary); }
+  .btn-danger { color: #c0392b; border-color: #f5d5d0; }
+  .empty { text-align: center; color: var(--text-light); font-size: 13px; padding: 28px 12px; line-height: 1.7; }
+  .empty-icon { font-size: 34px; margin-bottom: 8px; }
+  .link-btn { background: none; border: none; color: var(--primary); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; padding: 4px; }
+  .input-field.small { padding: 10px 12px; font-size: 14px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .setup-hero { text-align: center; padding: 8px 0 18px; }
+  .setup-hero .big { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 24px; font-weight: 900; color: var(--primary); }
+  .setup-hero p { font-size: 13px; color: var(--text-mid); line-height: 1.7; margin-top: 6px; }
+  .hidden-nav .tabs, .hidden-nav .bottom-nav { display: none; }
+
+  /* 申し送りシート */
+  .sheet { background: var(--white); border-radius: var(--radius); padding: 22px 20px; box-shadow: var(--card-shadow); margin-bottom: 16px; }
+  .sheet h2 { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 18px; color: var(--primary); margin-bottom: 4px; }
+  .sheet .meta { font-size: 12px; color: var(--text-mid); margin-bottom: 14px; line-height: 1.6; }
+  .sheet h3 { font-size: 13px; color: var(--primary); border-left: 4px solid var(--primary); padding-left: 8px; margin: 16px 0 8px; }
+  .sheet table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .sheet th, .sheet td { border: 1px solid var(--primary-pale); padding: 6px 4px; text-align: center; }
+  .sheet th { background: var(--primary-pale); font-weight: 700; }
+  .sheet td.left { text-align: left; }
+  .sheet .memo-item { font-size: 12px; line-height: 1.7; padding: 4px 0; border-bottom: 1px dashed var(--primary-pale); }
+  .sheet .memo-item b { color: var(--primary); margin-right: 6px; }
+  .sheet .q { font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
+  .sheet .blank { border-bottom: 1px solid var(--text-light); height: 28px; }
+  .sheet-actions { display: flex; flex-direction: column; gap: 0; }
+
+  @media print {
+    body { background: #fff; display: block; }
+    .phone-frame { max-width: 100%; width: 100%; }
+    .header, .tabs, .bottom-nav, .sheet-actions, .modal-overlay, .no-print { display: none !important; }
+    .content { padding: 0; overflow: visible; }
+    .screen { display: none !important; }
+    #screen-sheet { display: block !important; animation: none; }
+    .sheet { box-shadow: none; border: 1px solid #ccc; border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="phone-frame" id="frame">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="app-name">おそばに</div>
+        <div class="app-sub">介護記録・受診サポート</div>
+      </div>
+      <div class="header-avatar" onclick="showScreen('settings')" title="設定">⚙️</div>
+    </div>
+    <div class="user-info">
+      <div class="user-icon" id="hdr-icon">👴</div>
+      <div>
+        <div class="user-name" id="hdr-name">未設定</div>
+        <div class="user-rel" id="hdr-rel">初回設定をしてください</div>
+      </div>
+      <div class="next-visit">
+        <div class="next-visit-label">次回受診</div>
+        <div class="next-visit-date" id="hdr-visit">未定</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" data-screen="home" onclick="showScreen('home')"><span class="tab-icon">🏠</span>ホーム</div>
+    <div class="tab" data-screen="record" onclick="showScreen('record')"><span class="tab-icon">📝</span>記録する</div>
+    <div class="tab" data-screen="report" onclick="showScreen('report')"><span class="tab-icon">📋</span>受診</div>
+    <div class="tab" data-screen="share" onclick="showScreen('share')"><span class="tab-icon">💾</span>データ</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ===== SETUP（初回設定） ===== -->
+    <div class="screen" id="screen-setup">
+      <div class="setup-hero">
+        <div class="big">はじめまして</div>
+        <p>記録する方の情報を入力してください。<br>入力内容はこの端末にだけ保存されます。</p>
+      </div>
+      <div class="card">
+        <div class="input-group">
+          <div class="input-label">👤 記録する方のお名前</div>
+          <input type="text" class="input-field" id="st-name" placeholder="例：山田 太郎">
+        </div>
+        <div class="input-group">
+          <div class="input-label">🙂 アイコン</div>
+          <div class="condition-row" id="st-icon-btns">
+            <button class="condition-btn selected" onclick="selectSingle(this)">👴</button>
+            <button class="condition-btn" onclick="selectSingle(this)">👵</button>
+            <button class="condition-btn" onclick="selectSingle(this)">🧑</button>
+            <button class="condition-btn" onclick="selectSingle(this)">🌸</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">👨‍👩‍👧 記録する人（あなた）</div>
+          <div class="row2">
+            <input type="text" class="input-field" id="st-writer" placeholder="お名前（例：山田 花子）">
+            <input type="text" class="input-field" id="st-rel" placeholder="続柄（例：長女）">
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">🏥 かかりつけ・次回受診（あとからでも設定できます）</div>
+          <input type="text" class="input-field small" id="st-hospital" placeholder="病院名・診療科（例：○○内科）" style="margin-bottom:8px;">
+          <div class="row2">
+            <input type="date" class="input-field small" id="st-visit-date">
+            <input type="time" class="input-field small" id="st-visit-time">
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">💊 現在のお薬・注意点（任意）</div>
+          <textarea class="input-field" rows="3" id="st-meds" placeholder="例：アムロジピン5mg 朝食後／卵アレルギー"></textarea>
+        </div>
+        <button class="btn-primary" onclick="saveSettings(true)">✅ この内容で始める</button>
+        <button class="btn-secondary no-print" id="st-cancel" onclick="showScreen('settings')" style="display:none;">キャンセル</button>
+      </div>
+    </div>
+
+    <!-- ===== HOME ===== -->
+    <div class="screen active" id="screen-home">
+      <div class="notice" id="home-notice"></div>
+
+      <div class="section-title">最新のバイタル</div>
+      <div class="status-grid">
+        <div class="status-card">
+          <div class="status-icon">❤️</div>
+          <div class="status-label">血圧</div>
+          <div class="status-value" id="home-bp">--</div>
+          <div class="status-time" id="home-bp-t">未記録</div>
+        </div>
+        <div class="status-card">
+          <div class="status-icon">🌡️</div>
+          <div class="status-label">体温</div>
+          <div class="status-value" id="home-temp">--</div>
+          <div class="status-time" id="home-temp-t">未記録</div>
+        </div>
+        <div class="status-card">
+          <div class="status-icon">🍽️</div>
+          <div class="status-label">食事</div>
+          <div class="status-value" id="home-meal">--</div>
+          <div class="status-time" id="home-meal-t">未記録</div>
+        </div>
+        <div class="status-card">
+          <div class="status-icon">💊</div>
+          <div class="status-label">服薬</div>
+          <div class="status-value" id="home-med">--</div>
+          <div class="status-time" id="home-med-t">未記録</div>
+        </div>
+      </div>
+
+      <div class="section-title">最近の様子</div>
+      <div class="timeline" id="home-timeline"></div>
+    </div>
+
+    <!-- ===== RECORD ===== -->
+    <div class="screen" id="screen-record">
+      <div class="section-title">今日の様子を記録する</div>
+      <div class="card">
+        <div class="input-group">
+          <div class="input-label">📅 日付</div>
+          <input type="date" class="input-field small" id="rec-date">
+        </div>
+        <div class="input-group">
+          <div class="input-label">😊 体調・気分</div>
+          <div class="condition-row" id="condition-btns">
+            <button class="condition-btn" onclick="selectCondition(this, false)">とても良い</button>
+            <button class="condition-btn selected" onclick="selectCondition(this, false)">普通</button>
+            <button class="condition-btn" onclick="selectCondition(this, true)">やや不調</button>
+            <button class="condition-btn" onclick="selectCondition(this, true)">不調</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">🍽️ 食事の量</div>
+          <div class="condition-row" id="meal-btns">
+            <button class="condition-btn" onclick="selectSingle(this)">全量</button>
+            <button class="condition-btn" onclick="selectSingle(this)">8割</button>
+            <button class="condition-btn" onclick="selectSingle(this)">6割</button>
+            <button class="condition-btn" onclick="selectSingle(this)">4割</button>
+            <button class="condition-btn" onclick="selectSingle(this)">食べられず</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">❤️ バイタル（測った分だけ入力）</div>
+          <div class="vital-grid">
+            <div class="vital-input-card">
+              <div class="vital-input-label">❤️ 血圧（上）</div>
+              <input type="number" class="vital-input" id="vid-bphi" placeholder="---" inputmode="numeric">
+              <div class="vital-unit">mmHg</div>
+            </div>
+            <div class="vital-input-card">
+              <div class="vital-input-label">💙 血圧（下）</div>
+              <input type="number" class="vital-input" id="vid-bplo" placeholder="---" inputmode="numeric">
+              <div class="vital-unit">mmHg</div>
+            </div>
+            <div class="vital-input-card">
+              <div class="vital-input-label">🌡️ 体温</div>
+              <input type="number" class="vital-input" id="vid-temp" placeholder="--.-" step="0.1" inputmode="decimal">
+              <div class="vital-unit">℃</div>
+            </div>
+            <div class="vital-input-card">
+              <div class="vital-input-label">💓 脈拍</div>
+              <input type="number" class="vital-input" id="vid-pulse" placeholder="---" inputmode="numeric">
+              <div class="vital-unit">回/分</div>
+            </div>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">💊 服薬</div>
+          <div class="condition-row" id="med-btns">
+            <button class="condition-btn" onclick="selectSingle(this)">完了</button>
+            <button class="condition-btn" onclick="selectSingle(this)">一部</button>
+            <button class="condition-btn" onclick="selectCondition(this, true)">未服用</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">📝 メモ（自由記入）</div>
+          <textarea class="input-field" rows="4" id="memo" placeholder="例：朝食はお粥を完食。午前中はテレビを観て過ごした。"></textarea>
+        </div>
+        <button class="btn-primary" onclick="submitRecord()">📤 記録を保存する</button>
+      </div>
+    </div>
+
+    <!-- ===== REPORT（受診） ===== -->
+    <div class="screen" id="screen-report">
+      <div class="notice" id="report-notice"></div>
+
+      <div class="card">
+        <div class="input-label">📄 申し送りシート（受診当日用）</div>
+        <p style="font-size:13px;color:var(--text-mid);line-height:1.7;margin-bottom:12px;">
+          直近の記録（バイタル・食事・服薬・メモ）を1枚にまとめます。印刷して持参するか、テキストで送れます。
+        </p>
+        <div class="row2" style="margin-bottom:12px;">
+          <select class="input-field small" id="sheet-days">
+            <option value="7">直近7日分</option>
+            <option value="14" selected>直近14日分</option>
+            <option value="30">直近30日分</option>
+          </select>
+          <input type="text" class="input-field small" id="sheet-q" placeholder="先生に聞きたいこと">
+        </div>
+        <button class="btn-primary btn-accent" onclick="generateSheet()">📄 申し送りシートを作成</button>
+      </div>
+
+      <div class="section-title">受診の結果を記録</div>
+      <div class="card">
+        <div class="input-group">
+          <div class="row2">
+            <input type="date" class="input-field small" id="rp-date">
+            <input type="text" class="input-field small" id="rp-dept" placeholder="病院・診療科">
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">🩺 診察結果・先生の説明</div>
+          <textarea class="input-field" rows="3" id="rp-result" placeholder="例：血圧が高めのため降圧薬を変更"></textarea>
+        </div>
+        <div class="input-group">
+          <div class="input-label">💊 指示内容・お薬の変更</div>
+          <textarea class="input-field" rows="2" id="rp-order" placeholder="例：アムロジピン5mg 毎朝食後"></textarea>
+        </div>
+        <div class="input-group">
+          <div class="input-label">📅 次回受診</div>
+          <div class="row2">
+            <input type="date" class="input-field small" id="rp-next-date">
+            <input type="time" class="input-field small" id="rp-next-time">
+          </div>
+          <label style="font-size:12px;color:var(--text-mid);display:flex;gap:6px;align-items:center;margin-top:8px;">
+            <input type="checkbox" id="rp-update-next" checked> ヘッダーの「次回受診」も更新する
+          </label>
+        </div>
+        <button class="btn-primary" onclick="submitReport()">💾 受診結果を保存</button>
+      </div>
+
+      <div class="section-title">受診レポート一覧</div>
+      <div id="report-list"></div>
+    </div>
+
+    <!-- ===== SHEET（生成された申し送りシート） ===== -->
+    <div class="screen" id="screen-sheet">
+      <div id="sheet-area"></div>
+      <div class="sheet-actions">
+        <button class="btn-primary" onclick="window.print()">🖨️ 印刷 / PDF保存</button>
+        <button class="btn-secondary" onclick="shareSheetText()">📤 テキストで共有・コピー</button>
+        <button class="btn-secondary" onclick="showScreen('report')">← 受診画面に戻る</button>
+      </div>
+    </div>
+
+    <!-- ===== DATA（バックアップ） ===== -->
+    <div class="screen" id="screen-share">
+      <div class="section-title">データの保管と共有</div>
+      <div class="notice">
+        <div class="notice-icon">📱</div>
+        <div class="notice-text">記録は<span class="notice-bold">この端末の中にだけ</span>保存されています。機種変更やブラウザのデータ削除で消えるため、ときどきバックアップを取ってください。</div>
+      </div>
+      <div class="card">
+        <div class="input-label">💾 バックアップ</div>
+        <p style="font-size:12px;color:var(--text-mid);line-height:1.6;margin-bottom:10px;" id="data-stats"></p>
+        <button class="btn-primary" onclick="exportData()">📤 バックアップを書き出す（共有・コピー）</button>
+        <p style="font-size:11px;color:var(--text-mid);line-height:1.6;margin-top:8px;">書き出したテキストをLINEのKeepメモやメールの下書きに貼っておくと安心です。家族の端末で「読み込む」と同じ記録を見られます。</p>
+      </div>
+      <div class="card">
+        <div class="input-label">📥 バックアップを読み込む</div>
+        <textarea class="input-field" rows="4" id="import-text" placeholder="書き出したテキストをここに貼り付け"></textarea>
+        <button class="btn-secondary" onclick="importData()">📥 読み込む（既存の記録と合わせる）</button>
+      </div>
+      <div class="card">
+        <div class="input-label">🔒 プライバシー</div>
+        <p style="font-size:12px;color:var(--text-mid);line-height:1.7;">このアプリは外部のサーバーに一切データを送信しません。共有するときは、送り先が信頼できるご家族・関係者であることを確認してください。</p>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS ===== -->
+    <div class="screen" id="screen-settings">
+      <div class="section-title">設定</div>
+      <div class="card">
+        <div class="settings-row">
+          <div>
+            <div class="settings-title" id="set-name">-</div>
+            <div class="settings-desc" id="set-sub">-</div>
+          </div>
+          <button class="link-btn" onclick="openSetup(true)">編集</button>
+        </div>
+        <div class="settings-row" style="border-bottom:none;">
+          <div>
+            <div class="settings-title">次回受診</div>
+            <div class="settings-desc" id="set-visit">-</div>
+          </div>
+          <button class="link-btn" onclick="openSetup(true)">編集</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="input-label">❤️ バイタルの目安（この値以上で「高め」表示）</div>
+        <div class="vital-grid">
+          <div class="vital-input-card">
+            <div class="vital-input-label">⚠️ 血圧（上）</div>
+            <input type="number" class="vital-input" id="th-bphi" inputmode="numeric" onchange="saveThresholds()">
+            <div class="vital-unit">mmHg</div>
+          </div>
+          <div class="vital-input-card">
+            <div class="vital-input-label">⚠️ 血圧（下）</div>
+            <input type="number" class="vital-input" id="th-bplo" inputmode="numeric" onchange="saveThresholds()">
+            <div class="vital-unit">mmHg</div>
+          </div>
+          <div class="vital-input-card">
+            <div class="vital-input-label">🌡️ 体温</div>
+            <input type="number" class="vital-input" id="th-temp" step="0.1" inputmode="decimal" onchange="saveThresholds()">
+            <div class="vital-unit">℃</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="input-label">🗑️ データ</div>
+        <button class="btn-secondary btn-danger" onclick="clearAll()">すべての記録と設定を消去</button>
+      </div>
+      <div class="card">
+        <div class="settings-row" style="border-bottom:none;padding:4px 0;">
+          <div>
+            <div class="settings-title">おそばに について</div>
+            <div class="settings-desc">バージョン 1.1.0 ／ 端末内保存・オフライン対応</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-item active" data-screen="home" onclick="showScreen('home')"><span class="nav-icon">🏠</span><span class="nav-label">ホーム</span></div>
+    <div class="nav-item" data-screen="report" onclick="showScreen('report')"><span class="nav-icon">📋</span><span class="nav-label">受診</span></div>
+    <div class="nav-center"><div class="nav-center-btn" onclick="showScreen('record')">📝</div></div>
+    <div class="nav-item" data-screen="share" onclick="showScreen('share')"><span class="nav-icon">💾</span><span class="nav-label">データ</span></div>
+    <div class="nav-item" data-screen="settings" onclick="showScreen('settings')"><span class="nav-icon">⚙️</span><span class="nav-label">設定</span></div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="successModal">
+    <div class="modal">
+      <div class="modal-icon" id="modalIcon">✅</div>
+      <div class="modal-title" id="modalTitle">記録しました</div>
+      <div class="modal-text" id="modalText"></div>
+      <button class="btn-modal" id="modalBtn" onclick="closeModal()">閉じる</button>
+    </div>
+  </div>
+
+<script>
+// ===================== ストレージ =====================
+var KEY_SETTINGS = 'osoboni_settings';
+var KEY_RECORDS  = 'osoboni_records';
+var KEY_REPORTS  = 'osoboni_reports';
+var DEFAULT_TH = { bphi: 140, bplo: 90, temp: 37.5 };
+
+function lsGet(k, fallback) { try { var v = JSON.parse(localStorage.getItem(k)); return v === null || v === undefined ? fallback : v; } catch (e) { return fallback; } }
+function lsSet(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+
+var settings = lsGet(KEY_SETTINGS, null);
+var records  = lsGet(KEY_RECORDS, []);   // 新しい順
+var reports  = lsGet(KEY_REPORTS, []);   // 新しい順
+
+// 旧バージョン(1.0)の記録データを移行（date が「3月4日（火）」形式の場合はそのまま表示用に残す）
+records = records.map(function (r) {
+  if (!r.iso) { r.iso = r.date && /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date : isoToday(); }
+  return r;
+});
+
+// ===================== ユーティリティ =====================
+var W = ['日', '月', '火', '水', '木', '金', '土'];
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function isoToday() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function fmtDate(iso, withYear) {
+  if (!iso) return '';
+  var p = iso.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2]);
+  return (withYear ? p[0] + '年' : '') + (+p[1]) + '月' + (+p[2]) + '日（' + W[d.getDay()] + '）';
+}
+function fmtShort(iso) { if (!iso) return ''; var p = iso.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2]); return (+p[1]) + '/' + (+p[2]) + '（' + W[d.getDay()] + '）'; }
+function daysUntil(iso) { if (!iso) return null; var a = new Date(isoToday()), b = new Date(iso); return Math.round((b - a) / 86400000); }
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function nl2br(s) { return escapeHtml(s).replace(/\n/g, '<br>'); }
+function getSelText(rowId) {
+  var r = document.getElementById(rowId);
+  var b = r ? r.querySelector('.condition-btn.selected, .condition-btn.selected-warn') : null;
+  return b ? b.textContent : '';
+}
+function setSel(rowId, text) {
+  var r = document.getElementById(rowId); if (!r) return;
+  r.querySelectorAll('.condition-btn').forEach(function (b) {
+    b.classList.remove('selected', 'selected-warn');
+    if (b.textContent === text) b.classList.add(b.getAttribute('onclick').indexOf('true') > -1 ? 'selected-warn' : 'selected');
+  });
+}
+function th() { return (settings && settings.th) || DEFAULT_TH; }
+function isHighBP(r) { return (r.bpHi && +r.bpHi >= th().bphi) || (r.bpLo && +r.bpLo >= th().bplo); }
+function isFever(r) { return r.temp && +r.temp >= th().temp; }
+
+// ===================== 画面切替 =====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
+  var target = document.getElementById('screen-' + id);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.tabs .tab, .bottom-nav .nav-item').forEach(function (n) {
+    n.classList.toggle('active', n.getAttribute('data-screen') === id);
+  });
+  document.getElementById('frame').classList.toggle('hidden-nav', id === 'setup');
+  window.scrollTo(0, 0);
+  if (id === 'record') { var d = document.getElementById('rec-date'); if (!d.value) d.value = isoToday(); }
+  if (id === 'report') { renderReports(); var rd = document.getElementById('rp-date'); if (!rd.value) rd.value = isoToday(); }
+  if (id === 'share') renderDataStats();
+  if (id === 'settings') renderSettings();
+}
+function selectCondition(btn, warn) {
+  btn.closest('.condition-row').querySelectorAll('.condition-btn').forEach(function (b) { b.classList.remove('selected', 'selected-warn'); });
+  btn.classList.add(warn ? 'selected-warn' : 'selected');
+}
+function selectSingle(btn) { selectCondition(btn, false); }
+
+// ===================== モーダル =====================
+var modalCallback = null;
+function openModal(icon, title, html, btnText, cb) {
+  document.getElementById('modalIcon').textContent = icon;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalText').innerHTML = html;
+  document.getElementById('modalBtn').textContent = btnText || '閉じる';
+  modalCallback = cb || null;
+  document.getElementById('successModal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('successModal').classList.remove('show');
+  if (modalCallback) { var fn = modalCallback; modalCallback = null; fn(); }
+}
+
+// ===================== 設定（初回セットアップ） =====================
+function openSetup(editing) {
+  var s = settings || {};
+  document.getElementById('st-name').value = s.name || '';
+  document.getElementById('st-writer').value = s.writer || '';
+  document.getElementById('st-rel').value = s.rel || '';
+  document.getElementById('st-hospital').value = s.hospital || '';
+  document.getElementById('st-visit-date').value = s.visitDate || '';
+  document.getElementById('st-visit-time').value = s.visitTime || '';
+  document.getElementById('st-meds').value = s.meds || '';
+  setSel('st-icon-btns', s.icon || '👴');
+  document.getElementById('st-cancel').style.display = editing ? 'flex' : 'none';
+  showScreen('setup');
+}
+function saveSettings(first) {
+  var name = document.getElementById('st-name').value.trim();
+  if (!name) { openModal('✏️', 'お名前を入力してください', '記録する方のお名前は必須です。'); return; }
+  settings = settings || {};
+  settings.name = name;
+  settings.icon = getSelText('st-icon-btns') || '👴';
+  settings.writer = document.getElementById('st-writer').value.trim();
+  settings.rel = document.getElementById('st-rel').value.trim();
+  settings.hospital = document.getElementById('st-hospital').value.trim();
+  settings.visitDate = document.getElementById('st-visit-date').value;
+  settings.visitTime = document.getElementById('st-visit-time').value;
+  settings.meds = document.getElementById('st-meds').value.trim();
+  settings.th = settings.th || DEFAULT_TH;
+  lsSet(KEY_SETTINGS, settings);
+  renderAll();
+  showScreen('home');
+}
+function saveThresholds() {
+  if (!settings) return;
+  settings.th = {
+    bphi: +document.getElementById('th-bphi').value || DEFAULT_TH.bphi,
+    bplo: +document.getElementById('th-bplo').value || DEFAULT_TH.bplo,
+    temp: +document.getElementById('th-temp').value || DEFAULT_TH.temp
+  };
+  lsSet(KEY_SETTINGS, settings);
+  renderHome();
+}
+function clearAll() {
+  openModal('⚠️', '本当に消去しますか？', 'すべての記録・受診レポート・設定がこの端末から消えます。<br>元に戻せません。先にバックアップをおすすめします。', '消去する', function () {
+    localStorage.removeItem(KEY_SETTINGS); localStorage.removeItem(KEY_RECORDS); localStorage.removeItem(KEY_REPORTS);
+    location.reload();
+  });
+}
+
+// ===================== 描画 =====================
+function visitLabel() {
+  if (!settings || !settings.visitDate) return '';
+  return fmtDate(settings.visitDate) + (settings.visitTime ? ' ' + settings.visitTime : '') + (settings.hospital ? ' ' + settings.hospital : '');
+}
+function renderHeader() {
+  var s = settings || {};
+  document.getElementById('hdr-icon').textContent = s.icon || '👴';
+  document.getElementById('hdr-name').textContent = s.name ? s.name + 'さん' : '未設定';
+  document.getElementById('hdr-rel').textContent = s.name ? ((s.writer || s.rel) ? ((s.rel ? 'ご家族（' + s.rel + '）' : s.writer) + 'が記録') : 'ご家族が記録') : '初回設定をしてください';
+  var v = document.getElementById('hdr-visit');
+  if (s.visitDate) {
+    var n = daysUntil(s.visitDate);
+    v.textContent = fmtShort(s.visitDate) + (n === 0 ? ' 今日' : n === 1 ? ' 明日' : n > 1 ? ' あと' + n + '日' : '');
+  } else v.textContent = '未定';
+}
+function noticeHtml() {
+  if (!settings) return '<div class="notice-icon">👋</div><div class="notice-text">まず<span class="notice-bold">初回設定</span>でお名前などを登録してください。</div>';
+  if (!settings.visitDate) return '<div class="notice-icon">🏥</div><div class="notice-text">次回受診日が未設定です。<button class="link-btn" onclick="openSetup(true)">設定する</button></div>';
+  var n = daysUntil(settings.visitDate);
+  if (n < 0) return '<div class="notice-icon">📋</div><div class="notice-text"><span class="notice-bold">' + escapeHtml(fmtDate(settings.visitDate)) + '</span> の受診は終わりましたか？「受診」画面で結果と次回日を記録しましょう。</div>';
+  var when = n === 0 ? '今日' : n === 1 ? '明日' : 'あと' + n + '日で';
+  return '<div class="notice-icon">📅</div><div class="notice-text"><span class="notice-bold">' + escapeHtml(visitLabel()) + '</span>に受診予定（' + when + '）。「受診」画面から申し送りシートを作成できます。</div>';
+}
+function latest(field) { for (var i = 0; i < records.length; i++) { if (records[i][field]) return records[i]; } return null; }
+function renderHome() {
+  document.getElementById('home-notice').innerHTML = noticeHtml();
+  var r;
+  r = latest('bpHi');
+  var bp = document.getElementById('home-bp');
+  bp.className = 'status-value' + (r && isHighBP(r) ? ' status-warn' : '');
+  bp.innerHTML = r ? escapeHtml(r.bpHi) + '<span class="status-unit">/' + escapeHtml(r.bpLo || '--') + '</span>' : '--';
+  document.getElementById('home-bp-t').textContent = r ? fmtShort(r.iso) : '未記録';
+  r = latest('temp');
+  var t = document.getElementById('home-temp');
+  t.className = 'status-value' + (r ? (isFever(r) ? ' status-warn' : ' status-good') : '');
+  t.innerHTML = r ? escapeHtml(r.temp) + '<span class="status-unit">℃</span>' : '--';
+  document.getElementById('home-temp-t').textContent = r ? fmtShort(r.iso) : '未記録';
+  r = latest('meal');
+  var m = document.getElementById('home-meal');
+  m.className = 'status-value' + (r ? ((r.meal === '全量' || r.meal === '8割') ? ' status-good' : ' status-warn') : '');
+  m.textContent = r ? r.meal : '--';
+  document.getElementById('home-meal-t').textContent = r ? fmtShort(r.iso) : '未記録';
+  r = latest('med');
+  var md = document.getElementById('home-med');
+  md.className = 'status-value' + (r ? (r.med === '完了' ? ' status-good' : ' status-warn') : '');
+  md.textContent = r ? r.med : '--';
+  document.getElementById('home-med-t').textContent = r ? fmtShort(r.iso) : '未記録';
+
+  var tl = document.getElementById('home-timeline');
+  if (!records.length) {
+    tl.innerHTML = '<div class="empty"><div class="empty-icon">📝</div>まだ記録がありません。<br>下の「📝」ボタンから今日の様子を記録しましょう。</div>';
+    return;
+  }
+  tl.innerHTML = records.slice(0, 10).map(function (rec, i) {
+    var warn = rec.cond === '不調' || rec.cond === 'やや不調' || isHighBP(rec) || isFever(rec) || rec.med === '未服用';
+    var vit = [];
+    if (rec.bpHi) vit.push('血圧 ' + rec.bpHi + '/' + (rec.bpLo || '-'));
+    if (rec.temp) vit.push('体温 ' + rec.temp + '℃');
+    if (rec.pulse) vit.push('脈 ' + rec.pulse);
+    if (rec.meal) vit.push('食事 ' + rec.meal);
+    if (rec.med) vit.push('服薬 ' + rec.med);
+    return '<div class="timeline-item">' +
+      '<div class="timeline-dot ' + (warn ? 'dot-orange' : 'dot-green') + '">' + (warn ? '😔' : '😊') + '</div>' +
+      '<div class="timeline-content">' +
+      '<div class="timeline-date">' + escapeHtml(fmtDate(rec.iso)) + ' <button class="link-btn" onclick="deleteRecord(' + i + ')">削除</button></div>' +
+      '<div class="timeline-title">' + escapeHtml(rec.cond || '記録') + '</div>' +
+      (vit.length ? '<div class="timeline-text">' + escapeHtml(vit.join(' ／ ')) + '</div>' : '') +
+      (rec.memo ? '<div class="timeline-text">' + nl2br(rec.memo) + '</div>' : '') +
+      (warn ? '<span class="timeline-tag tag-orange">要経過観察</span>' : '<span class="timeline-tag tag-green">良好</span>') +
+      '</div></div>';
+  }).join('');
+}
+function renderReports() {
+  var list = document.getElementById('report-list');
+  document.getElementById('report-notice').innerHTML = noticeHtml();
+  if (!reports.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">🏥</div>受診レポートはまだありません。<br>受診後に、先生の説明や次回日を記録しておくと安心です。</div>'; return; }
+  list.innerHTML = reports.map(function (rp, i) {
+    return '<div class="report-card"><div class="report-header"><div class="report-title">🏥 ' + escapeHtml(rp.dept || '受診') + '</div><div class="report-date">' + escapeHtml(fmtDate(rp.iso)) + '</div></div><div class="report-body">' +
+      (rp.result ? '<div class="report-row"><div class="report-icon">🩺</div><div class="report-content"><div class="report-key">診察結果</div><div class="report-val">' + nl2br(rp.result) + '</div></div></div>' : '') +
+      (rp.order ? '<div class="report-row"><div class="report-icon">💊</div><div class="report-content"><div class="report-key">指示内容</div><div class="report-val">' + nl2br(rp.order) + '</div></div></div>' : '') +
+      (rp.nextDate ? '<div class="report-row"><div class="report-icon">📅</div><div class="report-content"><div class="report-key">次回受診</div><div class="report-val">' + escapeHtml(fmtDate(rp.nextDate) + (rp.nextTime ? ' ' + rp.nextTime : '')) + '</div></div></div>' : '') +
+      '<div style="text-align:right;"><button class="link-btn" onclick="deleteReport(' + i + ')">削除</button></div>' +
+      '</div></div>';
+  }).join('');
+}
+function renderSettings() {
+  var s = settings || {};
+  document.getElementById('set-name').textContent = s.name ? s.icon + ' ' + s.name + 'さん' : '未設定';
+  document.getElementById('set-sub').textContent = (s.writer || s.rel) ? '記録：' + (s.writer || '') + (s.rel ? '（' + s.rel + '）' : '') : '記録者未設定';
+  document.getElementById('set-visit').textContent = visitLabel() || '未定';
+  document.getElementById('th-bphi').value = th().bphi;
+  document.getElementById('th-bplo').value = th().bplo;
+  document.getElementById('th-temp').value = th().temp;
+}
+function renderDataStats() {
+  document.getElementById('data-stats').textContent = '現在：日々の記録 ' + records.length + ' 件、受診レポート ' + reports.length + ' 件' + (records.length ? '（最新 ' + fmtDate(records[0].iso, true) + '）' : '');
+}
+function renderAll() { renderHeader(); renderHome(); }
+
+// ===================== 記録 =====================
+function submitRecord() {
+  var rec = {
+    iso: document.getElementById('rec-date').value || isoToday(),
+    cond: getSelText('condition-btns') || '普通',
+    meal: getSelText('meal-btns') || '',
+    med: getSelText('med-btns') || '',
+    bpHi: document.getElementById('vid-bphi').value.trim(),
+    bpLo: document.getElementById('vid-bplo').value.trim(),
+    temp: document.getElementById('vid-temp').value.trim(),
+    pulse: document.getElementById('vid-pulse').value.trim(),
+    memo: document.getElementById('memo').value.trim(),
+    ts: Date.now()
+  };
+  records.unshift(rec);
+  records.sort(function (a, b) { return a.iso < b.iso ? 1 : a.iso > b.iso ? -1 : (b.ts || 0) - (a.ts || 0); });
+  records = records.slice(0, 500);
+  lsSet(KEY_RECORDS, records);
+  renderAll();
+  var alerts = [];
+  if (isHighBP(rec)) alerts.push('血圧が目安より高めです');
+  if (isFever(rec)) alerts.push('体温が目安より高めです');
+  openModal(alerts.length ? '⚠️' : '✅', '記録しました',
+    fmtDate(rec.iso) + 'の様子を保存しました。' + (alerts.length ? '<br><b style="color:var(--accent)">' + alerts.join('・') + '</b>' : ''),
+    'ホームに戻る', function () { resetRecordForm(); showScreen('home'); });
+}
+function resetRecordForm() {
+  document.querySelectorAll('#screen-record .vital-input').forEach(function (i) { i.value = ''; });
+  document.getElementById('memo').value = '';
+  document.getElementById('rec-date').value = isoToday();
+  setSel('condition-btns', '普通');
+  setSel('meal-btns', '');
+  setSel('med-btns', '');
+}
+function deleteRecord(i) {
+  openModal('🗑️', '記録を削除しますか？', escapeHtml(fmtDate(records[i].iso)) + 'の記録を削除します。', '削除する', function () {
+    records.splice(i, 1); lsSet(KEY_RECORDS, records); renderAll();
+  });
+}
+
+// ===================== 受診レポート =====================
+function submitReport() {
+  var rp = {
+    iso: document.getElementById('rp-date').value || isoToday(),
+    dept: document.getElementById('rp-dept').value.trim() || (settings && settings.hospital) || '',
+    result: document.getElementById('rp-result').value.trim(),
+    order: document.getElementById('rp-order').value.trim(),
+    nextDate: document.getElementById('rp-next-date').value,
+    nextTime: document.getElementById('rp-next-time').value,
+    ts: Date.now()
+  };
+  if (!rp.result && !rp.order && !rp.nextDate) { openModal('✏️', '内容を入力してください', '診察結果・指示内容・次回受診のいずれかを入力してください。'); return; }
+  reports.unshift(rp);
+  reports.sort(function (a, b) { return a.iso < b.iso ? 1 : a.iso > b.iso ? -1 : (b.ts || 0) - (a.ts || 0); });
+  lsSet(KEY_REPORTS, reports);
+  if (settings && document.getElementById('rp-update-next').checked && rp.nextDate) {
+    settings.visitDate = rp.nextDate; settings.visitTime = rp.nextTime;
+    if (rp.dept) settings.hospital = rp.dept;
+    lsSet(KEY_SETTINGS, settings);
+  }
+  ['rp-dept', 'rp-result', 'rp-order', 'rp-next-date', 'rp-next-time'].forEach(function (id) { document.getElementById(id).value = ''; });
+  document.getElementById('rp-date').value = isoToday();
+  renderAll(); renderReports();
+  openModal('✅', '受診結果を保存しました', rp.nextDate ? '次回受診：' + escapeHtml(fmtDate(rp.nextDate)) : '', '閉じる');
+}
+function deleteReport(i) {
+  openModal('🗑️', 'レポートを削除しますか？', escapeHtml(fmtDate(reports[i].iso)) + 'の受診レポートを削除します。', '削除する', function () {
+    reports.splice(i, 1); lsSet(KEY_REPORTS, reports); renderReports();
+  });
+}
+
+// ===================== 申し送りシート =====================
+var lastSheetText = '';
+function generateSheet() {
+  var days = +document.getElementById('sheet-days').value || 14;
+  var q = document.getElementById('sheet-q').value.trim();
+  var from = new Date(isoToday()); from.setDate(from.getDate() - days + 1);
+  var fromIso = from.getFullYear() + '-' + pad(from.getMonth() + 1) + '-' + pad(from.getDate());
+  var recs = records.filter(function (r) { return r.iso >= fromIso; }).slice().reverse(); // 古い順
+  var s = settings || {};
+  var lastRp = reports[0];
+
+  var html = '<div class="sheet">' +
+    '<h2>受診 申し送りシート</h2>' +
+    '<div class="meta">' +
+    '<b>' + escapeHtml(s.name || '') + ' さん</b>　作成日：' + escapeHtml(fmtDate(isoToday(), true)) + '<br>' +
+    '記録者：' + escapeHtml((s.writer || '') + (s.rel ? '（' + s.rel + '）' : '')) + '　受診先：' + escapeHtml(s.hospital || '') +
+    (s.visitDate ? '　受診日：' + escapeHtml(fmtDate(s.visitDate) + (s.visitTime ? ' ' + s.visitTime : '')) : '') +
+    '</div>';
+
+  if (s.meds) html += '<h3>現在のお薬・注意点</h3><div class="q">' + nl2br(s.meds) + '</div>';
+  if (lastRp) html += '<h3>前回受診（' + escapeHtml(fmtDate(lastRp.iso)) + (lastRp.dept ? ' ' + escapeHtml(lastRp.dept) : '') + '）</h3><div class="q">' + nl2br([lastRp.result, lastRp.order].filter(Boolean).join('\n')) + '</div>';
+
+  html += '<h3>直近' + days + '日間のバイタル・生活状況（' + recs.length + '日分）</h3>';
+  if (!recs.length) html += '<div class="q">この期間の記録はありません。</div>';
+  else {
+    html += '<table><tr><th>日付</th><th>体調</th><th>血圧</th><th>体温</th><th>脈</th><th>食事</th><th>服薬</th></tr>' +
+      recs.map(function (r) {
+        return '<tr><td>' + escapeHtml(fmtShort(r.iso)) + '</td><td>' + escapeHtml(r.cond || '') + '</td>' +
+          '<td' + (isHighBP(r) ? ' style="color:var(--accent);font-weight:700"' : '') + '>' + (r.bpHi ? escapeHtml(r.bpHi + '/' + (r.bpLo || '-')) : '') + '</td>' +
+          '<td' + (isFever(r) ? ' style="color:var(--accent);font-weight:700"' : '') + '>' + escapeHtml(r.temp || '') + '</td>' +
+          '<td>' + escapeHtml(r.pulse || '') + '</td><td>' + escapeHtml(r.meal || '') + '</td><td>' + escapeHtml(r.med || '') + '</td></tr>';
+      }).join('') + '</table>';
+    var memos = recs.filter(function (r) { return r.memo; });
+    if (memos.length) html += '<h3>気になったこと・メモ</h3>' + memos.map(function (r) { return '<div class="memo-item"><b>' + escapeHtml(fmtShort(r.iso)) + '</b>' + nl2br(r.memo) + '</div>'; }).join('');
+  }
+  html += '<h3>先生に聞きたいこと</h3>' + (q ? '<div class="q">' + nl2br(q) + '</div>' : '<div class="blank"></div><div class="blank"></div>');
+  html += '<h3>先生からの説明（受診時に記入）</h3><div class="blank"></div><div class="blank"></div><div class="blank"></div>';
+  html += '</div>';
+  document.getElementById('sheet-area').innerHTML = html;
+
+  // テキスト版
+  var t = [];
+  t.push('【受診 申し送りシート】' + (s.name || '') + ' さん　作成日 ' + fmtDate(isoToday(), true));
+  t.push('記録者：' + (s.writer || '') + (s.rel ? '（' + s.rel + '）' : '') + '　受診先：' + (s.hospital || ''));
+  if (s.meds) t.push('■現在のお薬・注意点\n' + s.meds);
+  if (lastRp) t.push('■前回受診（' + fmtDate(lastRp.iso) + '）\n' + [lastRp.result, lastRp.order].filter(Boolean).join('\n'));
+  t.push('■直近' + days + '日間の記録');
+  recs.forEach(function (r) {
+    var parts = [r.cond];
+    if (r.bpHi) parts.push('血圧' + r.bpHi + '/' + (r.bpLo || '-'));
+    if (r.temp) parts.push('体温' + r.temp);
+    if (r.pulse) parts.push('脈' + r.pulse);
+    if (r.meal) parts.push('食事' + r.meal);
+    if (r.med) parts.push('服薬' + r.med);
+    t.push(fmtShort(r.iso) + ' ' + parts.filter(Boolean).join(' ') + (r.memo ? '\n　' + r.memo.replace(/\n/g, '\n　') : ''));
+  });
+  if (q) t.push('■先生に聞きたいこと\n' + q);
+  lastSheetText = t.join('\n');
+  showScreen('sheet');
+}
+function shareSheetText() { shareText(lastSheetText, '申し送りシート'); }
+function shareText(text, title) {
+  if (navigator.share) {
+    navigator.share({ title: title, text: text }).catch(function () { copyText(text); });
+  } else copyText(text);
+}
+function copyText(text) {
+  var done = function () { openModal('📋', 'コピーしました', 'LINEやメールに貼り付けて送れます。'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+  else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { openModal('📋', 'コピーできませんでした', '<textarea class="input-field" rows="6" style="font-size:11px">' + escapeHtml(text) + '</textarea>'); }
+  document.body.removeChild(ta);
+}
+
+// ===================== バックアップ =====================
+function exportData() {
+  var payload = { app: 'osoboni', version: 1, exportedAt: new Date().toISOString(), settings: settings, records: records, reports: reports };
+  shareText('OSOBONI-BACKUP:' + JSON.stringify(payload), 'おそばに バックアップ');
+}
+function importData() {
+  var raw = document.getElementById('import-text').value.trim();
+  var m = raw.match(/OSOBONI-BACKUP:(\{[\s\S]*\})/);
+  var data = null;
+  try { data = JSON.parse(m ? m[1] : raw); } catch (e) {}
+  if (!data || data.app !== 'osoboni') { openModal('❌', '読み込めませんでした', '書き出したテキストをそのまま貼り付けてください。'); return; }
+  var key = function (r) { return r.iso + '|' + (r.ts || '') + '|' + (r.memo || r.result || ''); };
+  var seen = {};
+  records.concat(data.records || []).forEach(function (r) { seen[key(r)] = r; });
+  records = Object.keys(seen).map(function (k) { return seen[k]; }).sort(function (a, b) { return a.iso < b.iso ? 1 : a.iso > b.iso ? -1 : (b.ts || 0) - (a.ts || 0); });
+  var seen2 = {};
+  reports.concat(data.reports || []).forEach(function (r) { seen2[key(r)] = r; });
+  reports = Object.keys(seen2).map(function (k) { return seen2[k]; }).sort(function (a, b) { return a.iso < b.iso ? 1 : -1; });
+  if (!settings && data.settings) settings = data.settings;
+  lsSet(KEY_RECORDS, records); lsSet(KEY_REPORTS, reports); if (settings) lsSet(KEY_SETTINGS, settings);
+  document.getElementById('import-text').value = '';
+  renderAll(); renderDataStats();
+  openModal('✅', '読み込みました', '日々の記録 ' + records.length + ' 件、受診レポート ' + reports.length + ' 件になりました。');
+}
+
+// ===================== 初期化 =====================
+renderAll();
+if (!settings) openSetup(false); else showScreen('home');
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').catch(function () {});
+  });
+}
+</script>
+</div>
+</body>
+</html>
