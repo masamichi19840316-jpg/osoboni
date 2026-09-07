@@ -1,10 +1,10 @@
-# おそばに — 介護記録・受診サポート
+# おそばに — 介護記録・受診サポート（共有版）
 
-家族向けの介護記録 PWA。記録は端末内（localStorage）にのみ保存され、外部サーバーへは送信しません。
+家族・ケアマネジャーと介護記録を共有する PWA。バックエンドは Firebase（Auth + Firestore）。
 
 公開URL: https://masamichi19840316-jpg.github.io/osoboni/
 
-- ホーム：最新バイタルと最近の様子
-- 記録する：体調・食事・血圧・体温・脈拍・服薬・メモ
-- 受診：申し送りシート作成（印刷／テキスト共有）、受診結果の記録
-- データ：バックアップの書き出し・読み込み
+- `index.html` — アプリ本体（Firebase設定は先頭の `FIREBASE_CONFIG`）
+- `firebase-sdk.js` — Firebase JS SDK v10.12.5 をバンドルしたもの（オフライン起動用）
+- `firestore.rules` — Firestore セキュリティルール（Firebaseコンソールに貼り付け）
+- `sw.js` / `manifest.webmanifest` — PWA

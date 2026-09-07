@@ -794,6 +794,35 @@
     #screen-sheet { display: block !important; animation: none; }
     .sheet { box-shadow: none; border: 1px solid #ccc; border-radius: 0; }
   }
+
+  /* ===== v2 共有版 追加スタイル ===== */
+  .auth-hero { text-align: center; padding: 20px 0 12px; }
+  .auth-hero .big { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 26px; font-weight: 900; color: var(--primary); }
+  .auth-hero p { font-size: 13px; color: var(--text-mid); line-height: 1.7; margin-top: 6px; }
+  .btn-google { background: var(--white); color: var(--text); border: 2px solid var(--primary-pale); box-shadow: none; }
+  .btn-google:hover { background: var(--primary-pale); transform: none; box-shadow: none; }
+  .divider { display: flex; align-items: center; gap: 10px; color: var(--text-light); font-size: 11px; margin: 14px 0; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--primary-pale); }
+  .room-item { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--white); border-radius: var(--radius-sm); box-shadow: var(--card-shadow); margin-bottom: 10px; cursor: pointer; }
+  .room-item .ri { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .room-item .rn { font-size: 15px; font-weight: 700; }
+  .room-item .rr { font-size: 11px; color: var(--text-mid); }
+  .member-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--primary-pale); font-size: 13px; }
+  .member-row:last-child { border-bottom: none; }
+  .member-row .mi { width: 32px; height: 32px; border-radius: 50%; background: var(--primary-pale); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .member-row .mn { font-weight: 700; }
+  .member-row .mr { font-size: 11px; color: var(--text-mid); }
+  .role-badge { font-size: 10px; padding: 2px 8px; border-radius: 100px; background: var(--primary-pale); color: var(--primary); font-weight: 700; margin-left: auto; white-space: nowrap; }
+  .role-badge.viewer { background: #f1f2f6; color: var(--text-mid); }
+  .role-badge.owner { background: var(--accent-pale); color: var(--accent); }
+  .code-box { font-family: monospace; font-size: 28px; letter-spacing: 6px; text-align: center; background: var(--primary-pale); border-radius: var(--radius-sm); padding: 14px; color: var(--primary); font-weight: 700; margin: 10px 0; }
+  .by-line { font-size: 10px; color: var(--text-light); margin-top: 4px; }
+  .sync-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-light); margin-right: 4px; }
+  .sync-dot.off { background: var(--accent); }
+  .viewer-note { font-size: 12px; color: var(--text-mid); background: #f1f2f6; border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 12px; line-height: 1.6; }
+  .loading { text-align: center; padding: 60px 20px; color: var(--text-mid); font-size: 13px; }
+  .err { color: #c0392b; font-size: 12px; margin-top: 8px; line-height: 1.5; min-height: 1em; }
+  .input-field.small { padding: 10px 12px; font-size: 14px; }
 </style>
 </head>
 <body>
@@ -808,15 +837,15 @@
       </div>
       <div class="header-avatar" onclick="showScreen('settings')" title="設定">⚙️</div>
     </div>
-    <div class="user-info">
+    <div class="user-info" id="hdr-userinfo" onclick="showScreen('rooms')" style="cursor:pointer;">
       <div class="user-icon" id="hdr-icon">👴</div>
       <div>
-        <div class="user-name" id="hdr-name">未設定</div>
-        <div class="user-rel" id="hdr-rel">初回設定をしてください</div>
+        <div class="user-name" id="hdr-name">-</div>
+        <div class="user-rel" id="hdr-rel">-</div>
       </div>
       <div class="next-visit">
         <div class="next-visit-label">次回受診</div>
-        <div class="next-visit-date" id="hdr-visit">未定</div>
+        <div class="next-visit-date" id="hdr-visit">-</div>
       </div>
     </div>
   </div>
@@ -826,17 +855,62 @@
     <div class="tab active" data-screen="home" onclick="showScreen('home')"><span class="tab-icon">🏠</span>ホーム</div>
     <div class="tab" data-screen="record" onclick="showScreen('record')"><span class="tab-icon">📝</span>記録する</div>
     <div class="tab" data-screen="report" onclick="showScreen('report')"><span class="tab-icon">📋</span>受診</div>
-    <div class="tab" data-screen="share" onclick="showScreen('share')"><span class="tab-icon">💾</span>データ</div>
+    <div class="tab" data-screen="share" onclick="showScreen('share')"><span class="tab-icon">👥</span>共有</div>
   </div>
 
-  <!-- CONTENT -->
   <div class="content">
 
-    <!-- ===== SETUP（初回設定） ===== -->
+    <!-- ===== LOADING ===== -->
+    <div class="screen active" id="screen-loading"><div class="loading">読み込み中…</div></div>
+
+    <!-- ===== AUTH ===== -->
+    <div class="screen" id="screen-auth">
+      <div class="auth-hero">
+        <div class="big">おそばに</div>
+        <p>介護の記録を、家族やケアマネジャーと<br>安全に共有するアプリです。</p>
+      </div>
+      <div class="card">
+        <button class="btn-primary btn-google" onclick="loginGoogle()">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.8-6.8C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/><path fill="#FBBC05" d="M10.5 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.2 0 11.6-2 15.4-5.5l-7.5-5.8c-2 1.4-4.7 2.3-7.9 2.3-6.3 0-11.6-4.1-13.5-9.9l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+          Googleでログイン
+        </button>
+        <div class="divider">または メールアドレスで</div>
+        <div class="input-group">
+          <input type="email" class="input-field small" id="au-email" placeholder="メールアドレス" autocomplete="email" style="margin-bottom:8px;">
+          <input type="password" class="input-field small" id="au-pass" placeholder="パスワード（6文字以上）" autocomplete="current-password">
+          <div class="err" id="au-err"></div>
+        </div>
+        <button class="btn-primary" onclick="loginEmail()">ログイン</button>
+        <button class="btn-secondary" onclick="signupEmail()">新規登録（この内容でアカウント作成）</button>
+        <div style="text-align:center;margin-top:8px;"><button class="link-btn" onclick="resetPass()">パスワードを忘れた場合</button></div>
+      </div>
+      <p style="font-size:11px;color:var(--text-mid);line-height:1.6;padding:0 8px;">記録は暗号化された通信でクラウド（Google Firebase）に保存され、招待したメンバーだけが閲覧できます。</p>
+    </div>
+
+    <!-- ===== ROOMS（記録する方を選ぶ） ===== -->
+    <div class="screen" id="screen-rooms">
+      <div class="section-title">記録する方を選ぶ</div>
+      <div id="room-list"></div>
+      <div class="card">
+        <div class="input-label">🔑 招待コードで参加する</div>
+        <p style="font-size:12px;color:var(--text-mid);line-height:1.6;margin-bottom:8px;">ご家族などから受け取った6桁のコードを入力してください。</p>
+        <input type="text" class="input-field small" id="join-code" placeholder="例：A3K7PQ" maxlength="6" autocapitalize="characters" style="text-transform:uppercase;letter-spacing:3px;text-align:center;font-size:18px;">
+        <div class="row2" style="margin-top:8px;">
+          <input type="text" class="input-field small" id="join-name" placeholder="あなたのお名前">
+          <input type="text" class="input-field small" id="join-rel" placeholder="続柄・立場（例：長男、ケアマネ）">
+        </div>
+        <div class="err" id="join-err"></div>
+        <button class="btn-primary" onclick="joinRoom()">参加する</button>
+      </div>
+      <button class="btn-secondary" onclick="openSetup(false)">➕ 新しく記録する方を登録する</button>
+      <div style="text-align:center;margin-top:16px;"><button class="link-btn" onclick="logout()">ログアウト</button></div>
+    </div>
+
+    <!-- ===== SETUP（記録する方の登録／編集） ===== -->
     <div class="screen" id="screen-setup">
       <div class="setup-hero">
-        <div class="big">はじめまして</div>
-        <p>記録する方の情報を入力してください。<br>入力内容はこの端末にだけ保存されます。</p>
+        <div class="big" id="st-title">記録する方の登録</div>
+        <p>基本情報を入力してください。あとから変更できます。</p>
       </div>
       <div class="card">
         <div class="input-group">
@@ -852,15 +926,15 @@
             <button class="condition-btn" onclick="selectSingle(this)">🌸</button>
           </div>
         </div>
-        <div class="input-group">
-          <div class="input-label">👨‍👩‍👧 記録する人（あなた）</div>
+        <div class="input-group" id="st-me-group">
+          <div class="input-label">👨‍👩‍👧 あなた（記録する人）</div>
           <div class="row2">
             <input type="text" class="input-field" id="st-writer" placeholder="お名前（例：山田 花子）">
             <input type="text" class="input-field" id="st-rel" placeholder="続柄（例：長女）">
           </div>
         </div>
         <div class="input-group">
-          <div class="input-label">🏥 かかりつけ・次回受診（あとからでも設定できます）</div>
+          <div class="input-label">🏥 かかりつけ・次回受診</div>
           <input type="text" class="input-field small" id="st-hospital" placeholder="病院名・診療科（例：○○内科）" style="margin-bottom:8px;">
           <div class="row2">
             <input type="date" class="input-field small" id="st-visit-date">
@@ -871,43 +945,22 @@
           <div class="input-label">💊 現在のお薬・注意点（任意）</div>
           <textarea class="input-field" rows="3" id="st-meds" placeholder="例：アムロジピン5mg 朝食後／卵アレルギー"></textarea>
         </div>
-        <button class="btn-primary" onclick="saveSettings(true)">✅ この内容で始める</button>
-        <button class="btn-secondary no-print" id="st-cancel" onclick="showScreen('settings')" style="display:none;">キャンセル</button>
+        <div class="err" id="st-err"></div>
+        <button class="btn-primary" onclick="saveSetup()">✅ 保存する</button>
+        <button class="btn-secondary" onclick="cancelSetup()">キャンセル</button>
       </div>
     </div>
 
     <!-- ===== HOME ===== -->
-    <div class="screen active" id="screen-home">
+    <div class="screen" id="screen-home">
       <div class="notice" id="home-notice"></div>
-
       <div class="section-title">最新のバイタル</div>
       <div class="status-grid">
-        <div class="status-card">
-          <div class="status-icon">❤️</div>
-          <div class="status-label">血圧</div>
-          <div class="status-value" id="home-bp">--</div>
-          <div class="status-time" id="home-bp-t">未記録</div>
-        </div>
-        <div class="status-card">
-          <div class="status-icon">🌡️</div>
-          <div class="status-label">体温</div>
-          <div class="status-value" id="home-temp">--</div>
-          <div class="status-time" id="home-temp-t">未記録</div>
-        </div>
-        <div class="status-card">
-          <div class="status-icon">🍽️</div>
-          <div class="status-label">食事</div>
-          <div class="status-value" id="home-meal">--</div>
-          <div class="status-time" id="home-meal-t">未記録</div>
-        </div>
-        <div class="status-card">
-          <div class="status-icon">💊</div>
-          <div class="status-label">服薬</div>
-          <div class="status-value" id="home-med">--</div>
-          <div class="status-time" id="home-med-t">未記録</div>
-        </div>
+        <div class="status-card"><div class="status-icon">❤️</div><div class="status-label">血圧</div><div class="status-value" id="home-bp">--</div><div class="status-time" id="home-bp-t">未記録</div></div>
+        <div class="status-card"><div class="status-icon">🌡️</div><div class="status-label">体温</div><div class="status-value" id="home-temp">--</div><div class="status-time" id="home-temp-t">未記録</div></div>
+        <div class="status-card"><div class="status-icon">🍽️</div><div class="status-label">食事</div><div class="status-value" id="home-meal">--</div><div class="status-time" id="home-meal-t">未記録</div></div>
+        <div class="status-card"><div class="status-icon">💊</div><div class="status-label">服薬</div><div class="status-value" id="home-med">--</div><div class="status-time" id="home-med-t">未記録</div></div>
       </div>
-
       <div class="section-title">最近の様子</div>
       <div class="timeline" id="home-timeline"></div>
     </div>
@@ -915,11 +968,9 @@
     <!-- ===== RECORD ===== -->
     <div class="screen" id="screen-record">
       <div class="section-title">今日の様子を記録する</div>
-      <div class="card">
-        <div class="input-group">
-          <div class="input-label">📅 日付</div>
-          <input type="date" class="input-field small" id="rec-date">
-        </div>
+      <div class="viewer-note" id="record-viewer-note" style="display:none;">👀 あなたは「閲覧のみ」のメンバーです。記録の追加はできません。</div>
+      <div class="card" id="record-form">
+        <div class="input-group"><div class="input-label">📅 日付</div><input type="date" class="input-field small" id="rec-date"></div>
         <div class="input-group">
           <div class="input-label">😊 体調・気分</div>
           <div class="condition-row" id="condition-btns">
@@ -942,26 +993,10 @@
         <div class="input-group">
           <div class="input-label">❤️ バイタル（測った分だけ入力）</div>
           <div class="vital-grid">
-            <div class="vital-input-card">
-              <div class="vital-input-label">❤️ 血圧（上）</div>
-              <input type="number" class="vital-input" id="vid-bphi" placeholder="---" inputmode="numeric">
-              <div class="vital-unit">mmHg</div>
-            </div>
-            <div class="vital-input-card">
-              <div class="vital-input-label">💙 血圧（下）</div>
-              <input type="number" class="vital-input" id="vid-bplo" placeholder="---" inputmode="numeric">
-              <div class="vital-unit">mmHg</div>
-            </div>
-            <div class="vital-input-card">
-              <div class="vital-input-label">🌡️ 体温</div>
-              <input type="number" class="vital-input" id="vid-temp" placeholder="--.-" step="0.1" inputmode="decimal">
-              <div class="vital-unit">℃</div>
-            </div>
-            <div class="vital-input-card">
-              <div class="vital-input-label">💓 脈拍</div>
-              <input type="number" class="vital-input" id="vid-pulse" placeholder="---" inputmode="numeric">
-              <div class="vital-unit">回/分</div>
-            </div>
+            <div class="vital-input-card"><div class="vital-input-label">❤️ 血圧（上）</div><input type="number" class="vital-input" id="vid-bphi" placeholder="---" inputmode="numeric"><div class="vital-unit">mmHg</div></div>
+            <div class="vital-input-card"><div class="vital-input-label">💙 血圧（下）</div><input type="number" class="vital-input" id="vid-bplo" placeholder="---" inputmode="numeric"><div class="vital-unit">mmHg</div></div>
+            <div class="vital-input-card"><div class="vital-input-label">🌡️ 体温</div><input type="number" class="vital-input" id="vid-temp" placeholder="--.-" step="0.1" inputmode="decimal"><div class="vital-unit">℃</div></div>
+            <div class="vital-input-card"><div class="vital-input-label">💓 脈拍</div><input type="number" class="vital-input" id="vid-pulse" placeholder="---" inputmode="numeric"><div class="vital-unit">回/分</div></div>
           </div>
         </div>
         <div class="input-group">
@@ -972,68 +1007,42 @@
             <button class="condition-btn" onclick="selectCondition(this, true)">未服用</button>
           </div>
         </div>
-        <div class="input-group">
-          <div class="input-label">📝 メモ（自由記入）</div>
-          <textarea class="input-field" rows="4" id="memo" placeholder="例：朝食はお粥を完食。午前中はテレビを観て過ごした。"></textarea>
-        </div>
+        <div class="input-group"><div class="input-label">📝 メモ（自由記入）</div><textarea class="input-field" rows="4" id="memo" placeholder="例：朝食はお粥を完食。午前中はテレビを観て過ごした。"></textarea></div>
         <button class="btn-primary" onclick="submitRecord()">📤 記録を保存する</button>
       </div>
     </div>
 
-    <!-- ===== REPORT（受診） ===== -->
+    <!-- ===== REPORT ===== -->
     <div class="screen" id="screen-report">
       <div class="notice" id="report-notice"></div>
-
       <div class="card">
         <div class="input-label">📄 申し送りシート（受診当日用）</div>
-        <p style="font-size:13px;color:var(--text-mid);line-height:1.7;margin-bottom:12px;">
-          直近の記録（バイタル・食事・服薬・メモ）を1枚にまとめます。印刷して持参するか、テキストで送れます。
-        </p>
+        <p style="font-size:13px;color:var(--text-mid);line-height:1.7;margin-bottom:12px;">直近の記録を1枚にまとめます。印刷して持参するか、テキストで送れます。</p>
         <div class="row2" style="margin-bottom:12px;">
-          <select class="input-field small" id="sheet-days">
-            <option value="7">直近7日分</option>
-            <option value="14" selected>直近14日分</option>
-            <option value="30">直近30日分</option>
-          </select>
+          <select class="input-field small" id="sheet-days"><option value="7">直近7日分</option><option value="14" selected>直近14日分</option><option value="30">直近30日分</option></select>
           <input type="text" class="input-field small" id="sheet-q" placeholder="先生に聞きたいこと">
         </div>
         <button class="btn-primary btn-accent" onclick="generateSheet()">📄 申し送りシートを作成</button>
       </div>
-
-      <div class="section-title">受診の結果を記録</div>
-      <div class="card">
-        <div class="input-group">
-          <div class="row2">
-            <input type="date" class="input-field small" id="rp-date">
-            <input type="text" class="input-field small" id="rp-dept" placeholder="病院・診療科">
+      <div id="report-form-wrap">
+        <div class="section-title">受診の結果を記録</div>
+        <div class="card">
+          <div class="input-group"><div class="row2"><input type="date" class="input-field small" id="rp-date"><input type="text" class="input-field small" id="rp-dept" placeholder="病院・診療科"></div></div>
+          <div class="input-group"><div class="input-label">🩺 診察結果・先生の説明</div><textarea class="input-field" rows="3" id="rp-result" placeholder="例：血圧が高めのため降圧薬を変更"></textarea></div>
+          <div class="input-group"><div class="input-label">💊 指示内容・お薬の変更</div><textarea class="input-field" rows="2" id="rp-order" placeholder="例：アムロジピン5mg 毎朝食後"></textarea></div>
+          <div class="input-group">
+            <div class="input-label">📅 次回受診</div>
+            <div class="row2"><input type="date" class="input-field small" id="rp-next-date"><input type="time" class="input-field small" id="rp-next-time"></div>
+            <label style="font-size:12px;color:var(--text-mid);display:flex;gap:6px;align-items:center;margin-top:8px;"><input type="checkbox" id="rp-update-next" checked> 「次回受診」の予定も更新する</label>
           </div>
+          <button class="btn-primary" onclick="submitReport()">💾 受診結果を保存</button>
         </div>
-        <div class="input-group">
-          <div class="input-label">🩺 診察結果・先生の説明</div>
-          <textarea class="input-field" rows="3" id="rp-result" placeholder="例：血圧が高めのため降圧薬を変更"></textarea>
-        </div>
-        <div class="input-group">
-          <div class="input-label">💊 指示内容・お薬の変更</div>
-          <textarea class="input-field" rows="2" id="rp-order" placeholder="例：アムロジピン5mg 毎朝食後"></textarea>
-        </div>
-        <div class="input-group">
-          <div class="input-label">📅 次回受診</div>
-          <div class="row2">
-            <input type="date" class="input-field small" id="rp-next-date">
-            <input type="time" class="input-field small" id="rp-next-time">
-          </div>
-          <label style="font-size:12px;color:var(--text-mid);display:flex;gap:6px;align-items:center;margin-top:8px;">
-            <input type="checkbox" id="rp-update-next" checked> ヘッダーの「次回受診」も更新する
-          </label>
-        </div>
-        <button class="btn-primary" onclick="submitReport()">💾 受診結果を保存</button>
       </div>
-
       <div class="section-title">受診レポート一覧</div>
       <div id="report-list"></div>
     </div>
 
-    <!-- ===== SHEET（生成された申し送りシート） ===== -->
+    <!-- ===== SHEET ===== -->
     <div class="screen" id="screen-sheet">
       <div id="sheet-area"></div>
       <div class="sheet-actions">
@@ -1043,27 +1052,26 @@
       </div>
     </div>
 
-    <!-- ===== DATA（バックアップ） ===== -->
+    <!-- ===== SHARE（メンバー・招待） ===== -->
     <div class="screen" id="screen-share">
-      <div class="section-title">データの保管と共有</div>
+      <div class="section-title">家族・ケアマネジャーと共有</div>
+      <div class="card">
+        <div class="input-label">👨‍👩‍👧 メンバー</div>
+        <div id="member-list"></div>
+      </div>
+      <div class="card" id="invite-card">
+        <div class="input-label">🔑 メンバーを招待する</div>
+        <p style="font-size:12px;color:var(--text-mid);line-height:1.6;margin-bottom:10px;">招待コードを発行して相手に伝えます。相手はアプリを開いてログイン後、「招待コードで参加」からコードを入力します。コードは7日間有効で、1回使うと無効になります。</p>
+        <div class="condition-row" id="invite-role-btns" style="margin-bottom:10px;">
+          <button class="condition-btn selected" onclick="selectSingle(this)" data-role="editor">記録できる（家族向け）</button>
+          <button class="condition-btn" onclick="selectSingle(this)" data-role="viewer">閲覧のみ（ケアマネ向け）</button>
+        </div>
+        <button class="btn-primary" onclick="createInvite()">🔑 招待コードを発行</button>
+        <div id="invite-result"></div>
+      </div>
       <div class="notice">
-        <div class="notice-icon">📱</div>
-        <div class="notice-text">記録は<span class="notice-bold">この端末の中にだけ</span>保存されています。機種変更やブラウザのデータ削除で消えるため、ときどきバックアップを取ってください。</div>
-      </div>
-      <div class="card">
-        <div class="input-label">💾 バックアップ</div>
-        <p style="font-size:12px;color:var(--text-mid);line-height:1.6;margin-bottom:10px;" id="data-stats"></p>
-        <button class="btn-primary" onclick="exportData()">📤 バックアップを書き出す（共有・コピー）</button>
-        <p style="font-size:11px;color:var(--text-mid);line-height:1.6;margin-top:8px;">書き出したテキストをLINEのKeepメモやメールの下書きに貼っておくと安心です。家族の端末で「読み込む」と同じ記録を見られます。</p>
-      </div>
-      <div class="card">
-        <div class="input-label">📥 バックアップを読み込む</div>
-        <textarea class="input-field" rows="4" id="import-text" placeholder="書き出したテキストをここに貼り付け"></textarea>
-        <button class="btn-secondary" onclick="importData()">📥 読み込む（既存の記録と合わせる）</button>
-      </div>
-      <div class="card">
-        <div class="input-label">🔒 プライバシー</div>
-        <p style="font-size:12px;color:var(--text-mid);line-height:1.7;">このアプリは外部のサーバーに一切データを送信しません。共有するときは、送り先が信頼できるご家族・関係者であることを確認してください。</p>
+        <div class="notice-icon">🔒</div>
+        <div class="notice-text">記録を見られるのは<span class="notice-bold">招待したメンバーだけ</span>です。ケアマネジャーなど外部の方は「閲覧のみ」で招待することをおすすめします。</div>
       </div>
     </div>
 
@@ -1072,52 +1080,36 @@
       <div class="section-title">設定</div>
       <div class="card">
         <div class="settings-row">
-          <div>
-            <div class="settings-title" id="set-name">-</div>
-            <div class="settings-desc" id="set-sub">-</div>
-          </div>
-          <button class="link-btn" onclick="openSetup(true)">編集</button>
+          <div><div class="settings-title" id="set-name">-</div><div class="settings-desc" id="set-sub">-</div></div>
+          <button class="link-btn" id="set-edit-btn" onclick="openSetup(true)">編集</button>
         </div>
         <div class="settings-row" style="border-bottom:none;">
-          <div>
-            <div class="settings-title">次回受診</div>
-            <div class="settings-desc" id="set-visit">-</div>
-          </div>
-          <button class="link-btn" onclick="openSetup(true)">編集</button>
+          <div><div class="settings-title">次回受診</div><div class="settings-desc" id="set-visit">-</div></div>
         </div>
       </div>
       <div class="card">
         <div class="input-label">❤️ バイタルの目安（この値以上で「高め」表示）</div>
         <div class="vital-grid">
-          <div class="vital-input-card">
-            <div class="vital-input-label">⚠️ 血圧（上）</div>
-            <input type="number" class="vital-input" id="th-bphi" inputmode="numeric" onchange="saveThresholds()">
-            <div class="vital-unit">mmHg</div>
-          </div>
-          <div class="vital-input-card">
-            <div class="vital-input-label">⚠️ 血圧（下）</div>
-            <input type="number" class="vital-input" id="th-bplo" inputmode="numeric" onchange="saveThresholds()">
-            <div class="vital-unit">mmHg</div>
-          </div>
-          <div class="vital-input-card">
-            <div class="vital-input-label">🌡️ 体温</div>
-            <input type="number" class="vital-input" id="th-temp" step="0.1" inputmode="decimal" onchange="saveThresholds()">
-            <div class="vital-unit">℃</div>
-          </div>
+          <div class="vital-input-card"><div class="vital-input-label">⚠️ 血圧（上）</div><input type="number" class="vital-input" id="th-bphi" inputmode="numeric" onchange="saveThresholds()"><div class="vital-unit">mmHg</div></div>
+          <div class="vital-input-card"><div class="vital-input-label">⚠️ 血圧（下）</div><input type="number" class="vital-input" id="th-bplo" inputmode="numeric" onchange="saveThresholds()"><div class="vital-unit">mmHg</div></div>
+          <div class="vital-input-card"><div class="vital-input-label">🌡️ 体温</div><input type="number" class="vital-input" id="th-temp" step="0.1" inputmode="decimal" onchange="saveThresholds()"><div class="vital-unit">℃</div></div>
         </div>
       </div>
       <div class="card">
-        <div class="input-label">🗑️ データ</div>
-        <button class="btn-secondary btn-danger" onclick="clearAll()">すべての記録と設定を消去</button>
+        <div class="input-label">👤 アカウント</div>
+        <div class="settings-row"><div><div class="settings-title" id="set-account">-</div><div class="settings-desc"><span class="sync-dot" id="sync-dot"></span><span id="sync-text">同期中</span></div></div></div>
+        <div class="settings-row" style="border-bottom:none;"><div><div class="settings-title">別の方の記録に切り替え</div><div class="settings-desc">複数の方を登録している場合</div></div><button class="link-btn" onclick="showScreen('rooms')">切替</button></div>
       </div>
       <div class="card">
-        <div class="settings-row" style="border-bottom:none;padding:4px 0;">
-          <div>
-            <div class="settings-title">おそばに について</div>
-            <div class="settings-desc">バージョン 1.1.0 ／ 端末内保存・オフライン対応</div>
-          </div>
-        </div>
+        <div class="input-label">📦 この端末に残っている旧データ</div>
+        <p style="font-size:12px;color:var(--text-mid);line-height:1.6;margin-bottom:8px;" id="legacy-info">なし</p>
+        <button class="btn-secondary" id="legacy-btn" onclick="importLegacy()" style="display:none;margin-top:0;">📥 旧データをこの方の記録に取り込む</button>
       </div>
+      <div class="card">
+        <button class="btn-secondary" onclick="logout()" style="margin-top:0;">ログアウト</button>
+        <button class="btn-secondary btn-danger" id="leave-btn" onclick="leaveRoom()">この方の共有から抜ける</button>
+      </div>
+      <div class="card"><div class="settings-row" style="border-bottom:none;padding:4px 0;"><div><div class="settings-title">おそばに について</div><div class="settings-desc">バージョン 2.0.0 ／ クラウド同期・オフライン対応</div></div></div></div>
     </div>
 
   </div>
@@ -1127,7 +1119,7 @@
     <div class="nav-item active" data-screen="home" onclick="showScreen('home')"><span class="nav-icon">🏠</span><span class="nav-label">ホーム</span></div>
     <div class="nav-item" data-screen="report" onclick="showScreen('report')"><span class="nav-icon">📋</span><span class="nav-label">受診</span></div>
     <div class="nav-center"><div class="nav-center-btn" onclick="showScreen('record')">📝</div></div>
-    <div class="nav-item" data-screen="share" onclick="showScreen('share')"><span class="nav-icon">💾</span><span class="nav-label">データ</span></div>
+    <div class="nav-item" data-screen="share" onclick="showScreen('share')"><span class="nav-icon">👥</span><span class="nav-label">共有</span></div>
     <div class="nav-item" data-screen="settings" onclick="showScreen('settings')"><span class="nav-icon">⚙️</span><span class="nav-label">設定</span></div>
   </div>
 
@@ -1135,429 +1127,395 @@
   <div class="modal-overlay" id="successModal">
     <div class="modal">
       <div class="modal-icon" id="modalIcon">✅</div>
-      <div class="modal-title" id="modalTitle">記録しました</div>
+      <div class="modal-title" id="modalTitle"></div>
       <div class="modal-text" id="modalText"></div>
       <button class="btn-modal" id="modalBtn" onclick="closeModal()">閉じる</button>
+      <button class="link-btn" id="modalCancel" onclick="cancelModal()" style="display:none;margin-top:8px;">やめる</button>
     </div>
   </div>
+</div>
 
 <script>
-// ===================== ストレージ =====================
-var KEY_SETTINGS = 'osoboni_settings';
-var KEY_RECORDS  = 'osoboni_records';
-var KEY_REPORTS  = 'osoboni_reports';
-var DEFAULT_TH = { bphi: 140, bplo: 90, temp: 37.5 };
+// ===== Firebase設定（Firebaseコンソール「プロジェクトの設定」→ マイアプリ の値を貼る）=====
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD_j1wPv4DIy3JVTIf5Zzetpf9P71GzYjE",
+  authDomain: "osoboni.firebaseapp.com",
+  projectId: "osoboni",
+  storageBucket: "osoboni.firebasestorage.app",
+  messagingSenderId: "641493172032",
+  appId: "1:641493172032:web:3821391c76268c52e904a5"
+};
+</script>
 
-function lsGet(k, fallback) { try { var v = JSON.parse(localStorage.getItem(k)); return v === null || v === undefined ? fallback : v; } catch (e) { return fallback; } }
-function lsSet(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+<script type="module">
+import { initializeApp, getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, GoogleAuthProvider,
+         signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut,
+         initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+         doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, orderBy, limit,
+         serverTimestamp, arrayUnion, arrayRemove, getDocs } from "./firebase-sdk.js";
 
-var settings = lsGet(KEY_SETTINGS, null);
-var records  = lsGet(KEY_RECORDS, []);   // 新しい順
-var reports  = lsGet(KEY_REPORTS, []);   // 新しい順
+// ===================== 初期化 =====================
+const app = initializeApp(window.FIREBASE_CONFIG);
+const auth = getAuth(app);
+let db;
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch (e) { db = initializeFirestore(app, {}); }
 
-// 旧バージョン(1.0)の記録データを移行（date が「3月4日（火）」形式の場合はそのまま表示用に残す）
-records = records.map(function (r) {
-  if (!r.iso) { r.iso = r.date && /^\d{4}-\d{2}-\d{2}$/.test(r.date) ? r.date : isoToday(); }
-  return r;
-});
+const DEFAULT_TH = { bphi: 140, bplo: 90, temp: 37.5 };
+const lastRoomKey = () => 'osoboni_last_room_' + (user ? user.uid : '');
+let user = null, room = null, roomId = null, myRole = null;
+let records = [], reports = [], members = [];
+let unsubs = [];
+let lastSheetText = '';
+let currentScreen = 'loading';
 
 // ===================== ユーティリティ =====================
-var W = ['日', '月', '火', '水', '木', '金', '土'];
-function pad(n) { return (n < 10 ? '0' : '') + n; }
-function isoToday() { var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
-function fmtDate(iso, withYear) {
-  if (!iso) return '';
-  var p = iso.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2]);
-  return (withYear ? p[0] + '年' : '') + (+p[1]) + '月' + (+p[2]) + '日（' + W[d.getDay()] + '）';
+const W = ['日','月','火','水','木','金','土'];
+const $ = id => document.getElementById(id);
+const pad = n => (n < 10 ? '0' : '') + n;
+const isoToday = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); };
+function fmtDate(iso, withYear) { if (!iso) return ''; const p = iso.split('-'); const d = new Date(+p[0], +p[1]-1, +p[2]); return (withYear ? p[0] + '年' : '') + (+p[1]) + '月' + (+p[2]) + '日（' + W[d.getDay()] + '）'; }
+function fmtShort(iso) { if (!iso) return ''; const p = iso.split('-'); const d = new Date(+p[0], +p[1]-1, +p[2]); return (+p[1]) + '/' + (+p[2]) + '（' + W[d.getDay()] + '）'; }
+function daysUntil(iso) { if (!iso) return null; return Math.round((new Date(iso) - new Date(isoToday())) / 86400000); }
+const escapeHtml = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nl2br = s => escapeHtml(s).replace(/\n/g, '<br>');
+function getSelText(rowId) { const r = $(rowId); const b = r && r.querySelector('.condition-btn.selected, .condition-btn.selected-warn'); return b ? b.textContent : ''; }
+function setSel(rowId, text) { const r = $(rowId); if (!r) return; r.querySelectorAll('.condition-btn').forEach(b => { b.classList.remove('selected','selected-warn'); if (b.textContent === text) b.classList.add(b.getAttribute('onclick').includes('true') ? 'selected-warn' : 'selected'); }); }
+const th = () => (room && room.th) || DEFAULT_TH;
+const isHighBP = r => (r.bpHi && +r.bpHi >= th().bphi) || (r.bpLo && +r.bpLo >= th().bplo);
+const isFever = r => r.temp && +r.temp >= th().temp;
+const canEdit = () => myRole === 'owner' || myRole === 'editor';
+const isOwner = () => myRole === 'owner';
+const genCode = () => { const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)]; return s; };
+function authErr(e) {
+  const m = { 'auth/invalid-email': 'メールアドレスの形式が正しくありません', 'auth/user-not-found': 'このメールアドレスは登録されていません', 'auth/wrong-password': 'パスワードが違います', 'auth/invalid-credential': 'メールアドレスまたはパスワードが違います', 'auth/email-already-in-use': 'このメールアドレスは既に登録されています（ログインしてください）', 'auth/weak-password': 'パスワードは6文字以上にしてください', 'auth/missing-password': 'パスワードを入力してください', 'auth/popup-closed-by-user': 'ログインがキャンセルされました', 'auth/network-request-failed': '通信できません。電波状況を確認してください', 'auth/unauthorized-domain': 'このドメインはFirebaseで承認されていません（設定 → 承認済みドメイン）' };
+  return m[e.code] || (e.message || String(e));
 }
-function fmtShort(iso) { if (!iso) return ''; var p = iso.split('-'); var d = new Date(+p[0], +p[1] - 1, +p[2]); return (+p[1]) + '/' + (+p[2]) + '（' + W[d.getDay()] + '）'; }
-function daysUntil(iso) { if (!iso) return null; var a = new Date(isoToday()), b = new Date(iso); return Math.round((b - a) / 86400000); }
-function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-function nl2br(s) { return escapeHtml(s).replace(/\n/g, '<br>'); }
-function getSelText(rowId) {
-  var r = document.getElementById(rowId);
-  var b = r ? r.querySelector('.condition-btn.selected, .condition-btn.selected-warn') : null;
-  return b ? b.textContent : '';
-}
-function setSel(rowId, text) {
-  var r = document.getElementById(rowId); if (!r) return;
-  r.querySelectorAll('.condition-btn').forEach(function (b) {
-    b.classList.remove('selected', 'selected-warn');
-    if (b.textContent === text) b.classList.add(b.getAttribute('onclick').indexOf('true') > -1 ? 'selected-warn' : 'selected');
-  });
-}
-function th() { return (settings && settings.th) || DEFAULT_TH; }
-function isHighBP(r) { return (r.bpHi && +r.bpHi >= th().bphi) || (r.bpLo && +r.bpLo >= th().bplo); }
-function isFever(r) { return r.temp && +r.temp >= th().temp; }
 
-// ===================== 画面切替 =====================
+// ===================== 画面 =====================
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(function (s) { s.classList.remove('active'); });
-  var target = document.getElementById('screen-' + id);
-  if (target) target.classList.add('active');
-  document.querySelectorAll('.tabs .tab, .bottom-nav .nav-item').forEach(function (n) {
-    n.classList.toggle('active', n.getAttribute('data-screen') === id);
-  });
-  document.getElementById('frame').classList.toggle('hidden-nav', id === 'setup');
+  if (!user && !['loading','auth'].includes(id)) id = 'auth';
+  if (user && !room && !['loading','auth','rooms','setup'].includes(id)) id = 'rooms';
+  currentScreen = id;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const t = $('screen-' + id); if (t) t.classList.add('active');
+  document.querySelectorAll('.tabs .tab, .bottom-nav .nav-item').forEach(n => n.classList.toggle('active', n.getAttribute('data-screen') === id));
+  $('frame').classList.toggle('hidden-nav', ['loading','auth','rooms','setup'].includes(id));
+  $('hdr-userinfo').style.display = room ? 'flex' : 'none';
   window.scrollTo(0, 0);
-  if (id === 'record') { var d = document.getElementById('rec-date'); if (!d.value) d.value = isoToday(); }
-  if (id === 'report') { renderReports(); var rd = document.getElementById('rp-date'); if (!rd.value) rd.value = isoToday(); }
-  if (id === 'share') renderDataStats();
+  if (id === 'record') { if (!$('rec-date').value) $('rec-date').value = isoToday(); $('record-viewer-note').style.display = canEdit() ? 'none' : 'block'; $('record-form').style.display = canEdit() ? 'block' : 'none'; }
+  if (id === 'report') { if (!$('rp-date').value) $('rp-date').value = isoToday(); $('report-form-wrap').style.display = canEdit() ? 'block' : 'none'; renderReports(); }
+  if (id === 'share') renderMembers();
   if (id === 'settings') renderSettings();
+  if (id === 'rooms') renderRooms();
 }
-function selectCondition(btn, warn) {
-  btn.closest('.condition-row').querySelectorAll('.condition-btn').forEach(function (b) { b.classList.remove('selected', 'selected-warn'); });
-  btn.classList.add(warn ? 'selected-warn' : 'selected');
-}
+function selectCondition(btn, warn) { btn.closest('.condition-row').querySelectorAll('.condition-btn').forEach(b => b.classList.remove('selected','selected-warn')); btn.classList.add(warn ? 'selected-warn' : 'selected'); }
 function selectSingle(btn) { selectCondition(btn, false); }
 
-// ===================== モーダル =====================
-var modalCallback = null;
-function openModal(icon, title, html, btnText, cb) {
-  document.getElementById('modalIcon').textContent = icon;
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalText').innerHTML = html;
-  document.getElementById('modalBtn').textContent = btnText || '閉じる';
-  modalCallback = cb || null;
-  document.getElementById('successModal').classList.add('show');
+let modalCb = null;
+function openModal(icon, title, html, btnText, cb, cancelable) {
+  $('modalIcon').textContent = icon; $('modalTitle').textContent = title; $('modalText').innerHTML = html;
+  $('modalBtn').textContent = btnText || '閉じる'; modalCb = cb || null;
+  $('modalCancel').style.display = cancelable ? 'inline-block' : 'none';
+  $('successModal').classList.add('show');
 }
-function closeModal() {
-  document.getElementById('successModal').classList.remove('show');
-  if (modalCallback) { var fn = modalCallback; modalCallback = null; fn(); }
+function closeModal() { $('successModal').classList.remove('show'); if (modalCb) { const fn = modalCb; modalCb = null; fn(); } }
+function cancelModal() { modalCb = null; $('successModal').classList.remove('show'); }
+function toastErr(e, title) { console.error(e); openModal('❌', title || 'エラーが発生しました', escapeHtml(e && (e.code === 'permission-denied' ? 'この操作の権限がありません' : e.message || e))); }
+
+// ===================== 認証 =====================
+async function loginGoogle() {
+  $('au-err').textContent = '';
+  const provider = new GoogleAuthProvider();
+  try { await signInWithPopup(auth, provider); }
+  catch (e) {
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment' || e.code === 'auth/cancelled-popup-request') { try { await signInWithRedirect(auth, provider); } catch (e2) { $('au-err').textContent = authErr(e2); } }
+    else $('au-err').textContent = authErr(e);
+  }
+}
+async function loginEmail() { $('au-err').textContent = ''; try { await signInWithEmailAndPassword(auth, $('au-email').value.trim(), $('au-pass').value); } catch (e) { $('au-err').textContent = authErr(e); } }
+async function signupEmail() { $('au-err').textContent = ''; try { await createUserWithEmailAndPassword(auth, $('au-email').value.trim(), $('au-pass').value); } catch (e) { $('au-err').textContent = authErr(e); } }
+async function resetPass() {
+  const em = $('au-email').value.trim(); if (!em) { $('au-err').textContent = 'メールアドレスを入力してから押してください'; return; }
+  try { await sendPasswordResetEmail(auth, em); openModal('📧', '再設定メールを送りました', escapeHtml(em) + ' 宛のメールのリンクから新しいパスワードを設定してください。'); } catch (e) { $('au-err').textContent = authErr(e); }
+}
+async function logout() { await detachRoom(); await signOut(auth); }
+
+getRedirectResult(auth).catch(e => { $('au-err').textContent = authErr(e); });
+onAuthStateChanged(auth, async u => {
+  user = u;
+  if (!u) { await detachRoom(); showScreen('auth'); return; }
+  $('set-account').textContent = u.email || u.displayName || 'ログイン中';
+  const last = localStorage.getItem(lastRoomKey());
+  if (last) { const ok = await attachRoom(last); if (ok) return; }
+  showScreen('rooms');
+});
+
+// ===================== 部屋（記録する方） =====================
+async function renderRooms() {
+  const list = $('room-list'); list.innerHTML = '<div class="loading" style="padding:20px">読み込み中…</div>';
+  try {
+    const us = await getDoc(doc(db, 'users', user.uid));
+    const ids = (us.exists() && us.data().rooms) || [];
+    const items = [];
+    for (const id of ids) {
+      try { const rs = await getDoc(doc(db, 'rooms', id)); if (rs.exists()) items.push({ id, ...rs.data() }); } catch (e) {}
+    }
+    if (!items.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">👋</div>まだ登録がありません。<br>新しく登録するか、招待コードで参加してください。</div>'; return; }
+    list.innerHTML = items.map(r => `<div class="room-item" onclick="selectRoom('${r.id}')"><div class="ri">${escapeHtml(r.icon || '👴')}</div><div><div class="rn">${escapeHtml(r.name)}さん</div><div class="rr">${escapeHtml(r.hospital || '')}${r.visitDate ? '　次回 ' + escapeHtml(fmtShort(r.visitDate)) : ''}</div></div><div style="margin-left:auto;color:var(--text-light)">›</div></div>`).join('');
+  } catch (e) { list.innerHTML = '<div class="err">' + escapeHtml(e.message) + '</div>'; }
+}
+async function selectRoom(id) { showScreen('loading'); const ok = await attachRoom(id); if (!ok) showScreen('rooms'); }
+async function detachRoom() { unsubs.forEach(u => u()); unsubs = []; room = null; roomId = null; myRole = null; records = []; reports = []; members = []; }
+async function attachRoom(id) {
+  await detachRoom();
+  try {
+    const ms = await getDoc(doc(db, 'rooms', id, 'members', user.uid));
+    if (!ms.exists()) { localStorage.removeItem(lastRoomKey()); return false; }
+    myRole = ms.data().role;
+    const rs = await getDoc(doc(db, 'rooms', id));
+    if (!rs.exists()) { localStorage.removeItem(lastRoomKey()); return false; }
+    roomId = id; room = rs.data(); localStorage.setItem(lastRoomKey(), id);
+    unsubs.push(onSnapshot(doc(db, 'rooms', id), s => { if (s.exists()) { room = s.data(); renderHeader(); renderHome(); if (currentScreen === 'settings') renderSettings(); } }));
+    unsubs.push(onSnapshot(query(collection(db, 'rooms', id, 'records'), orderBy('iso', 'desc'), limit(400)), s => { records = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => a.iso < b.iso ? 1 : a.iso > b.iso ? -1 : (b.ts || 0) - (a.ts || 0)); renderHome(); }, e => toastErr(e, '記録を読み込めません')));
+    unsubs.push(onSnapshot(query(collection(db, 'rooms', id, 'reports'), orderBy('iso', 'desc'), limit(100)), s => { reports = s.docs.map(d => ({ id: d.id, ...d.data() })); if (currentScreen === 'report') renderReports(); }));
+    unsubs.push(onSnapshot(collection(db, 'rooms', id, 'members'), s => { members = s.docs.map(d => ({ uid: d.id, ...d.data() })); renderHeader(); if (currentScreen === 'share') renderMembers(); if (currentScreen === 'settings') renderSettings(); }));
+    renderHeader(); renderHome(); showScreen('home');
+    checkLegacy();
+    return true;
+  } catch (e) { console.error(e); localStorage.removeItem(lastRoomKey()); return false; }
 }
 
-// ===================== 設定（初回セットアップ） =====================
+// ----- 登録・編集 -----
+let editingRoom = false;
 function openSetup(editing) {
-  var s = settings || {};
-  document.getElementById('st-name').value = s.name || '';
-  document.getElementById('st-writer').value = s.writer || '';
-  document.getElementById('st-rel').value = s.rel || '';
-  document.getElementById('st-hospital').value = s.hospital || '';
-  document.getElementById('st-visit-date').value = s.visitDate || '';
-  document.getElementById('st-visit-time').value = s.visitTime || '';
-  document.getElementById('st-meds').value = s.meds || '';
-  setSel('st-icon-btns', s.icon || '👴');
-  document.getElementById('st-cancel').style.display = editing ? 'flex' : 'none';
+  editingRoom = !!editing;
+  const s = editing ? room : {};
+  const me = editing ? (members.find(m => m.uid === user.uid) || {}) : {};
+  $('st-title').textContent = editing ? '基本情報の編集' : '記録する方の登録';
+  $('st-name').value = s.name || ''; $('st-writer').value = me.name || (user.displayName || ''); $('st-rel').value = me.rel || '';
+  $('st-hospital').value = s.hospital || ''; $('st-visit-date').value = s.visitDate || ''; $('st-visit-time').value = s.visitTime || ''; $('st-meds').value = s.meds || '';
+  setSel('st-icon-btns', s.icon || '👴'); $('st-err').textContent = '';
   showScreen('setup');
 }
-function saveSettings(first) {
-  var name = document.getElementById('st-name').value.trim();
-  if (!name) { openModal('✏️', 'お名前を入力してください', '記録する方のお名前は必須です。'); return; }
-  settings = settings || {};
-  settings.name = name;
-  settings.icon = getSelText('st-icon-btns') || '👴';
-  settings.writer = document.getElementById('st-writer').value.trim();
-  settings.rel = document.getElementById('st-rel').value.trim();
-  settings.hospital = document.getElementById('st-hospital').value.trim();
-  settings.visitDate = document.getElementById('st-visit-date').value;
-  settings.visitTime = document.getElementById('st-visit-time').value;
-  settings.meds = document.getElementById('st-meds').value.trim();
-  settings.th = settings.th || DEFAULT_TH;
-  lsSet(KEY_SETTINGS, settings);
-  renderAll();
-  showScreen('home');
+function cancelSetup() { showScreen(editingRoom ? 'settings' : 'rooms'); }
+async function saveSetup() {
+  const name = $('st-name').value.trim(); if (!name) { $('st-err').textContent = '記録する方のお名前は必須です'; return; }
+  const data = { name, icon: getSelText('st-icon-btns') || '👴', hospital: $('st-hospital').value.trim(), visitDate: $('st-visit-date').value, visitTime: $('st-visit-time').value, meds: $('st-meds').value.trim(), updatedAt: serverTimestamp() };
+  const me = { name: $('st-writer').value.trim(), rel: $('st-rel').value.trim() };
+  try {
+    if (editingRoom) {
+      await updateDoc(doc(db, 'rooms', roomId), data);
+      await updateDoc(doc(db, 'rooms', roomId, 'members', user.uid), me);
+      showScreen('settings');
+    } else {
+      const ref = doc(collection(db, 'rooms'));
+      await setDoc(ref, { ...data, ownerUid: user.uid, th: DEFAULT_TH, createdAt: serverTimestamp() });
+      await setDoc(doc(db, 'rooms', ref.id, 'members', user.uid), { ...me, role: 'owner', email: user.email || '', joinedAt: serverTimestamp() });
+      await setDoc(doc(db, 'users', user.uid), { rooms: arrayUnion(ref.id), email: user.email || '' }, { merge: true });
+      showScreen('loading'); await attachRoom(ref.id);
+    }
+  } catch (e) { $('st-err').textContent = e.code === 'permission-denied' ? '権限がありません（セキュリティルールを確認してください）' : e.message; }
 }
-function saveThresholds() {
-  if (!settings) return;
-  settings.th = {
-    bphi: +document.getElementById('th-bphi').value || DEFAULT_TH.bphi,
-    bplo: +document.getElementById('th-bplo').value || DEFAULT_TH.bplo,
-    temp: +document.getElementById('th-temp').value || DEFAULT_TH.temp
-  };
-  lsSet(KEY_SETTINGS, settings);
-  renderHome();
+async function saveThresholds() {
+  if (!canEdit()) return;
+  try { await updateDoc(doc(db, 'rooms', roomId), { th: { bphi: +$('th-bphi').value || DEFAULT_TH.bphi, bplo: +$('th-bplo').value || DEFAULT_TH.bplo, temp: +$('th-temp').value || DEFAULT_TH.temp } }); } catch (e) { toastErr(e); }
 }
-function clearAll() {
-  openModal('⚠️', '本当に消去しますか？', 'すべての記録・受診レポート・設定がこの端末から消えます。<br>元に戻せません。先にバックアップをおすすめします。', '消去する', function () {
-    localStorage.removeItem(KEY_SETTINGS); localStorage.removeItem(KEY_RECORDS); localStorage.removeItem(KEY_REPORTS);
-    location.reload();
-  });
+
+// ----- 招待・参加 -----
+async function createInvite() {
+  const btn = $('invite-role-btns').querySelector('.selected'); const role = btn ? btn.getAttribute('data-role') : 'editor';
+  const code = genCode();
+  try {
+    await setDoc(doc(db, 'invites', code), { roomId, role, roomName: room.name, createdBy: user.uid, createdAt: serverTimestamp(), expiresAt: Date.now() + 7 * 86400000 });
+    const url = location.origin + location.pathname;
+    const text = `【おそばに】${room.name}さんの記録への招待\n招待コード：${code}（${role === 'viewer' ? '閲覧のみ' : '記録できる'}）\n1. ${url} を開いてログイン\n2. 「招待コードで参加する」にコードを入力\n※7日間有効`;
+    $('invite-result').innerHTML = `<div class="code-box">${code}</div><div style="font-size:12px;color:var(--text-mid);text-align:center;margin-bottom:8px;">${role === 'viewer' ? '閲覧のみ' : '記録できる'}メンバー用・7日間有効</div><button class="btn-secondary" onclick="shareText(${JSON.stringify(text).replace(/"/g, '&quot;')}, 'おそばに 招待')">📤 LINEやメールで送る</button>`;
+  } catch (e) { toastErr(e, '招待コードを発行できません'); }
+}
+async function joinRoom() {
+  const code = $('join-code').value.trim().toUpperCase(); const name = $('join-name').value.trim(); const rel = $('join-rel').value.trim();
+  $('join-err').textContent = '';
+  if (code.length !== 6) { $('join-err').textContent = '6桁の招待コードを入力してください'; return; }
+  if (!name) { $('join-err').textContent = 'あなたのお名前を入力してください'; return; }
+  try {
+    const inv = await getDoc(doc(db, 'invites', code));
+    if (!inv.exists()) { $('join-err').textContent = '招待コードが見つかりません（有効期限切れか、使用済みです）'; return; }
+    const d = inv.data();
+    if (d.expiresAt && Date.now() > d.expiresAt) { $('join-err').textContent = '招待コードの有効期限が切れています'; return; }
+    await setDoc(doc(db, 'rooms', d.roomId, 'members', user.uid), { name, rel, role: d.role, email: user.email || '', inviteCode: code, joinedAt: serverTimestamp() });
+    await setDoc(doc(db, 'users', user.uid), { rooms: arrayUnion(d.roomId), email: user.email || '' }, { merge: true });
+    try { await deleteDoc(doc(db, 'invites', code)); } catch (e) {}
+    $('join-code').value = ''; $('join-name').value = ''; $('join-rel').value = '';
+    showScreen('loading'); await attachRoom(d.roomId);
+  } catch (e) { $('join-err').textContent = e.code === 'permission-denied' ? '参加できませんでした（コードが無効です）' : e.message; }
+}
+function renderMembers() {
+  const list = $('member-list');
+  $('invite-card').style.display = isOwner() ? 'block' : 'none';
+  if (!members.length) { list.innerHTML = '<div class="empty">読み込み中…</div>'; return; }
+  const order = { owner: 0, editor: 1, viewer: 2 };
+  list.innerHTML = members.slice().sort((a, b) => order[a.role] - order[b.role]).map(m => {
+    const label = m.role === 'owner' ? '管理者' : m.role === 'editor' ? '記録できる' : '閲覧のみ';
+    const canRemove = isOwner() && m.uid !== user.uid;
+    return `<div class="member-row"><div class="mi">${m.role === 'viewer' ? '👀' : '✍️'}</div><div><div class="mn">${escapeHtml(m.name || m.email || '（名前未設定）')}${m.uid === user.uid ? '（あなた）' : ''}</div><div class="mr">${escapeHtml(m.rel || '')}</div></div><span class="role-badge ${m.role}">${label}</span>${canRemove ? `<button class="link-btn" onclick="removeMember('${m.uid}')">削除</button>` : ''}</div>`;
+  }).join('');
+}
+function removeMember(uid) {
+  const m = members.find(x => x.uid === uid); if (!m) return;
+  openModal('⚠️', 'メンバーを削除しますか？', escapeHtml(m.name || m.email) + ' さんは記録を見られなくなります。', '削除する', async () => {
+    try { await deleteDoc(doc(db, 'rooms', roomId, 'members', uid)); } catch (e) { toastErr(e); }
+  }, true);
+}
+function leaveRoom() {
+  if (isOwner()) { openModal('ℹ️', '管理者は抜けられません', '管理者はこの記録から抜けることができません。'); return; }
+  openModal('⚠️', 'この方の共有から抜けますか？', escapeHtml(room.name) + 'さんの記録が見られなくなります。再度見るには招待が必要です。', '抜ける', async () => {
+    try { const id = roomId; await deleteDoc(doc(db, 'rooms', id, 'members', user.uid)); await updateDoc(doc(db, 'users', user.uid), { rooms: arrayRemove(id) }); localStorage.removeItem(lastRoomKey()); await detachRoom(); showScreen('rooms'); } catch (e) { toastErr(e); }
+  }, true);
 }
 
 // ===================== 描画 =====================
-function visitLabel() {
-  if (!settings || !settings.visitDate) return '';
-  return fmtDate(settings.visitDate) + (settings.visitTime ? ' ' + settings.visitTime : '') + (settings.hospital ? ' ' + settings.hospital : '');
-}
+function visitLabel() { if (!room || !room.visitDate) return ''; return fmtDate(room.visitDate) + (room.visitTime ? ' ' + room.visitTime : '') + (room.hospital ? ' ' + room.hospital : ''); }
 function renderHeader() {
-  var s = settings || {};
-  document.getElementById('hdr-icon').textContent = s.icon || '👴';
-  document.getElementById('hdr-name').textContent = s.name ? s.name + 'さん' : '未設定';
-  document.getElementById('hdr-rel').textContent = s.name ? ((s.writer || s.rel) ? ((s.rel ? 'ご家族（' + s.rel + '）' : s.writer) + 'が記録') : 'ご家族が記録') : '初回設定をしてください';
-  var v = document.getElementById('hdr-visit');
-  if (s.visitDate) {
-    var n = daysUntil(s.visitDate);
-    v.textContent = fmtShort(s.visitDate) + (n === 0 ? ' 今日' : n === 1 ? ' 明日' : n > 1 ? ' あと' + n + '日' : '');
-  } else v.textContent = '未定';
+  if (!room) return;
+  const me = members.find(m => m.uid === user.uid) || {};
+  $('hdr-icon').textContent = room.icon || '👴'; $('hdr-name').textContent = room.name + 'さん';
+  $('hdr-rel').textContent = myRole === 'viewer' ? '閲覧のみ' : (me.rel ? me.rel + 'として記録' : '記録中');
+  const v = $('hdr-visit');
+  if (room.visitDate) { const n = daysUntil(room.visitDate); v.textContent = fmtShort(room.visitDate) + (n === 0 ? ' 今日' : n === 1 ? ' 明日' : n > 1 ? ' あと' + n + '日' : ''); } else v.textContent = '未定';
 }
 function noticeHtml() {
-  if (!settings) return '<div class="notice-icon">👋</div><div class="notice-text">まず<span class="notice-bold">初回設定</span>でお名前などを登録してください。</div>';
-  if (!settings.visitDate) return '<div class="notice-icon">🏥</div><div class="notice-text">次回受診日が未設定です。<button class="link-btn" onclick="openSetup(true)">設定する</button></div>';
-  var n = daysUntil(settings.visitDate);
-  if (n < 0) return '<div class="notice-icon">📋</div><div class="notice-text"><span class="notice-bold">' + escapeHtml(fmtDate(settings.visitDate)) + '</span> の受診は終わりましたか？「受診」画面で結果と次回日を記録しましょう。</div>';
-  var when = n === 0 ? '今日' : n === 1 ? '明日' : 'あと' + n + '日で';
+  if (!room) return '';
+  if (!room.visitDate) return '<div class="notice-icon">🏥</div><div class="notice-text">次回受診日が未設定です。' + (canEdit() ? '<button class="link-btn" onclick="openSetup(true)">設定する</button>' : '') + '</div>';
+  const n = daysUntil(room.visitDate);
+  if (n < 0) return '<div class="notice-icon">📋</div><div class="notice-text"><span class="notice-bold">' + escapeHtml(fmtDate(room.visitDate)) + '</span> の受診は終わりましたか？「受診」画面で結果と次回日を記録しましょう。</div>';
+  const when = n === 0 ? '今日' : n === 1 ? '明日' : 'あと' + n + '日で';
   return '<div class="notice-icon">📅</div><div class="notice-text"><span class="notice-bold">' + escapeHtml(visitLabel()) + '</span>に受診予定（' + when + '）。「受診」画面から申し送りシートを作成できます。</div>';
 }
-function latest(field) { for (var i = 0; i < records.length; i++) { if (records[i][field]) return records[i]; } return null; }
+const latest = f => records.find(r => r[f]) || null;
 function renderHome() {
-  document.getElementById('home-notice').innerHTML = noticeHtml();
-  var r;
-  r = latest('bpHi');
-  var bp = document.getElementById('home-bp');
-  bp.className = 'status-value' + (r && isHighBP(r) ? ' status-warn' : '');
-  bp.innerHTML = r ? escapeHtml(r.bpHi) + '<span class="status-unit">/' + escapeHtml(r.bpLo || '--') + '</span>' : '--';
-  document.getElementById('home-bp-t').textContent = r ? fmtShort(r.iso) : '未記録';
-  r = latest('temp');
-  var t = document.getElementById('home-temp');
-  t.className = 'status-value' + (r ? (isFever(r) ? ' status-warn' : ' status-good') : '');
-  t.innerHTML = r ? escapeHtml(r.temp) + '<span class="status-unit">℃</span>' : '--';
-  document.getElementById('home-temp-t').textContent = r ? fmtShort(r.iso) : '未記録';
-  r = latest('meal');
-  var m = document.getElementById('home-meal');
-  m.className = 'status-value' + (r ? ((r.meal === '全量' || r.meal === '8割') ? ' status-good' : ' status-warn') : '');
-  m.textContent = r ? r.meal : '--';
-  document.getElementById('home-meal-t').textContent = r ? fmtShort(r.iso) : '未記録';
-  r = latest('med');
-  var md = document.getElementById('home-med');
-  md.className = 'status-value' + (r ? (r.med === '完了' ? ' status-good' : ' status-warn') : '');
-  md.textContent = r ? r.med : '--';
-  document.getElementById('home-med-t').textContent = r ? fmtShort(r.iso) : '未記録';
-
-  var tl = document.getElementById('home-timeline');
-  if (!records.length) {
-    tl.innerHTML = '<div class="empty"><div class="empty-icon">📝</div>まだ記録がありません。<br>下の「📝」ボタンから今日の様子を記録しましょう。</div>';
-    return;
-  }
-  tl.innerHTML = records.slice(0, 10).map(function (rec, i) {
-    var warn = rec.cond === '不調' || rec.cond === 'やや不調' || isHighBP(rec) || isFever(rec) || rec.med === '未服用';
-    var vit = [];
-    if (rec.bpHi) vit.push('血圧 ' + rec.bpHi + '/' + (rec.bpLo || '-'));
-    if (rec.temp) vit.push('体温 ' + rec.temp + '℃');
-    if (rec.pulse) vit.push('脈 ' + rec.pulse);
-    if (rec.meal) vit.push('食事 ' + rec.meal);
-    if (rec.med) vit.push('服薬 ' + rec.med);
-    return '<div class="timeline-item">' +
-      '<div class="timeline-dot ' + (warn ? 'dot-orange' : 'dot-green') + '">' + (warn ? '😔' : '😊') + '</div>' +
-      '<div class="timeline-content">' +
-      '<div class="timeline-date">' + escapeHtml(fmtDate(rec.iso)) + ' <button class="link-btn" onclick="deleteRecord(' + i + ')">削除</button></div>' +
-      '<div class="timeline-title">' + escapeHtml(rec.cond || '記録') + '</div>' +
-      (vit.length ? '<div class="timeline-text">' + escapeHtml(vit.join(' ／ ')) + '</div>' : '') +
-      (rec.memo ? '<div class="timeline-text">' + nl2br(rec.memo) + '</div>' : '') +
-      (warn ? '<span class="timeline-tag tag-orange">要経過観察</span>' : '<span class="timeline-tag tag-green">良好</span>') +
-      '</div></div>';
+  if (!room) return;
+  $('home-notice').innerHTML = noticeHtml();
+  let r = latest('bpHi'); $('home-bp').className = 'status-value' + (r && isHighBP(r) ? ' status-warn' : ''); $('home-bp').innerHTML = r ? escapeHtml(r.bpHi) + '<span class="status-unit">/' + escapeHtml(r.bpLo || '--') + '</span>' : '--'; $('home-bp-t').textContent = r ? fmtShort(r.iso) : '未記録';
+  r = latest('temp'); $('home-temp').className = 'status-value' + (r ? (isFever(r) ? ' status-warn' : ' status-good') : ''); $('home-temp').innerHTML = r ? escapeHtml(r.temp) + '<span class="status-unit">℃</span>' : '--'; $('home-temp-t').textContent = r ? fmtShort(r.iso) : '未記録';
+  r = latest('meal'); $('home-meal').className = 'status-value' + (r ? ((r.meal === '全量' || r.meal === '8割') ? ' status-good' : ' status-warn') : ''); $('home-meal').textContent = r ? r.meal : '--'; $('home-meal-t').textContent = r ? fmtShort(r.iso) : '未記録';
+  r = latest('med'); $('home-med').className = 'status-value' + (r ? (r.med === '完了' ? ' status-good' : ' status-warn') : ''); $('home-med').textContent = r ? r.med : '--'; $('home-med-t').textContent = r ? fmtShort(r.iso) : '未記録';
+  const tl = $('home-timeline');
+  if (!records.length) { tl.innerHTML = '<div class="empty"><div class="empty-icon">📝</div>まだ記録がありません。' + (canEdit() ? '<br>下の「📝」ボタンから今日の様子を記録しましょう。' : '') + '</div>'; return; }
+  tl.innerHTML = records.slice(0, 15).map(rec => {
+    const warn = rec.cond === '不調' || rec.cond === 'やや不調' || isHighBP(rec) || isFever(rec) || rec.med === '未服用';
+    const vit = []; if (rec.bpHi) vit.push('血圧 ' + rec.bpHi + '/' + (rec.bpLo || '-')); if (rec.temp) vit.push('体温 ' + rec.temp + '℃'); if (rec.pulse) vit.push('脈 ' + rec.pulse); if (rec.meal) vit.push('食事 ' + rec.meal); if (rec.med) vit.push('服薬 ' + rec.med);
+    return `<div class="timeline-item"><div class="timeline-dot ${warn ? 'dot-orange' : 'dot-green'}">${warn ? '😔' : '😊'}</div><div class="timeline-content"><div class="timeline-date">${escapeHtml(fmtDate(rec.iso))}${canEdit() ? ` <button class="link-btn" onclick="deleteRecord('${rec.id}')">削除</button>` : ''}</div><div class="timeline-title">${escapeHtml(rec.cond || '記録')}</div>${vit.length ? '<div class="timeline-text">' + escapeHtml(vit.join(' ／ ')) + '</div>' : ''}${rec.memo ? '<div class="timeline-text">' + nl2br(rec.memo) + '</div>' : ''}<span class="timeline-tag ${warn ? 'tag-orange' : 'tag-green'}">${warn ? '要経過観察' : '良好'}</span>${rec.by ? '<div class="by-line">記録：' + escapeHtml(rec.by) + '</div>' : ''}</div></div>`;
   }).join('');
 }
 function renderReports() {
-  var list = document.getElementById('report-list');
-  document.getElementById('report-notice').innerHTML = noticeHtml();
-  if (!reports.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">🏥</div>受診レポートはまだありません。<br>受診後に、先生の説明や次回日を記録しておくと安心です。</div>'; return; }
-  list.innerHTML = reports.map(function (rp, i) {
-    return '<div class="report-card"><div class="report-header"><div class="report-title">🏥 ' + escapeHtml(rp.dept || '受診') + '</div><div class="report-date">' + escapeHtml(fmtDate(rp.iso)) + '</div></div><div class="report-body">' +
-      (rp.result ? '<div class="report-row"><div class="report-icon">🩺</div><div class="report-content"><div class="report-key">診察結果</div><div class="report-val">' + nl2br(rp.result) + '</div></div></div>' : '') +
-      (rp.order ? '<div class="report-row"><div class="report-icon">💊</div><div class="report-content"><div class="report-key">指示内容</div><div class="report-val">' + nl2br(rp.order) + '</div></div></div>' : '') +
-      (rp.nextDate ? '<div class="report-row"><div class="report-icon">📅</div><div class="report-content"><div class="report-key">次回受診</div><div class="report-val">' + escapeHtml(fmtDate(rp.nextDate) + (rp.nextTime ? ' ' + rp.nextTime : '')) + '</div></div></div>' : '') +
-      '<div style="text-align:right;"><button class="link-btn" onclick="deleteReport(' + i + ')">削除</button></div>' +
-      '</div></div>';
-  }).join('');
+  const list = $('report-list'); $('report-notice').innerHTML = noticeHtml();
+  if (!reports.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">🏥</div>受診レポートはまだありません。</div>'; return; }
+  list.innerHTML = reports.map(rp => `<div class="report-card"><div class="report-header"><div class="report-title">🏥 ${escapeHtml(rp.dept || '受診')}</div><div class="report-date">${escapeHtml(fmtDate(rp.iso))}</div></div><div class="report-body">${rp.result ? `<div class="report-row"><div class="report-icon">🩺</div><div class="report-content"><div class="report-key">診察結果</div><div class="report-val">${nl2br(rp.result)}</div></div></div>` : ''}${rp.order ? `<div class="report-row"><div class="report-icon">💊</div><div class="report-content"><div class="report-key">指示内容</div><div class="report-val">${nl2br(rp.order)}</div></div></div>` : ''}${rp.nextDate ? `<div class="report-row"><div class="report-icon">📅</div><div class="report-content"><div class="report-key">次回受診</div><div class="report-val">${escapeHtml(fmtDate(rp.nextDate) + (rp.nextTime ? ' ' + rp.nextTime : ''))}</div></div></div>` : ''}${canEdit() ? `<div style="text-align:right;"><button class="link-btn" onclick="deleteReport('${rp.id}')">削除</button></div>` : ''}</div></div>`).join('');
 }
 function renderSettings() {
-  var s = settings || {};
-  document.getElementById('set-name').textContent = s.name ? s.icon + ' ' + s.name + 'さん' : '未設定';
-  document.getElementById('set-sub').textContent = (s.writer || s.rel) ? '記録：' + (s.writer || '') + (s.rel ? '（' + s.rel + '）' : '') : '記録者未設定';
-  document.getElementById('set-visit').textContent = visitLabel() || '未定';
-  document.getElementById('th-bphi').value = th().bphi;
-  document.getElementById('th-bplo').value = th().bplo;
-  document.getElementById('th-temp').value = th().temp;
+  if (!room) return;
+  const me = members.find(m => m.uid === user.uid) || {};
+  $('set-name').textContent = room.icon + ' ' + room.name + 'さん';
+  $('set-sub').textContent = 'あなた：' + (me.name || '') + (me.rel ? '（' + me.rel + '）' : '') + '／' + (myRole === 'owner' ? '管理者' : myRole === 'editor' ? '記録できる' : '閲覧のみ');
+  $('set-visit').textContent = visitLabel() || '未定';
+  $('set-edit-btn').style.display = canEdit() ? 'inline-block' : 'none';
+  $('th-bphi').value = th().bphi; $('th-bplo').value = th().bplo; $('th-temp').value = th().temp;
+  ['th-bphi','th-bplo','th-temp'].forEach(id => $(id).disabled = !canEdit());
+  $('leave-btn').style.display = isOwner() ? 'none' : 'flex';
+  checkLegacy();
 }
-function renderDataStats() {
-  document.getElementById('data-stats').textContent = '現在：日々の記録 ' + records.length + ' 件、受診レポート ' + reports.length + ' 件' + (records.length ? '（最新 ' + fmtDate(records[0].iso, true) + '）' : '');
-}
-function renderAll() { renderHeader(); renderHome(); }
 
 // ===================== 記録 =====================
-function submitRecord() {
-  var rec = {
-    iso: document.getElementById('rec-date').value || isoToday(),
-    cond: getSelText('condition-btns') || '普通',
-    meal: getSelText('meal-btns') || '',
-    med: getSelText('med-btns') || '',
-    bpHi: document.getElementById('vid-bphi').value.trim(),
-    bpLo: document.getElementById('vid-bplo').value.trim(),
-    temp: document.getElementById('vid-temp').value.trim(),
-    pulse: document.getElementById('vid-pulse').value.trim(),
-    memo: document.getElementById('memo').value.trim(),
-    ts: Date.now()
-  };
-  records.unshift(rec);
-  records.sort(function (a, b) { return a.iso < b.iso ? 1 : a.iso > b.iso ? -1 : (b.ts || 0) - (a.ts || 0); });
-  records = records.slice(0, 500);
-  lsSet(KEY_RECORDS, records);
-  renderAll();
-  var alerts = [];
-  if (isHighBP(rec)) alerts.push('血圧が目安より高めです');
-  if (isFever(rec)) alerts.push('体温が目安より高めです');
-  openModal(alerts.length ? '⚠️' : '✅', '記録しました',
-    fmtDate(rec.iso) + 'の様子を保存しました。' + (alerts.length ? '<br><b style="color:var(--accent)">' + alerts.join('・') + '</b>' : ''),
-    'ホームに戻る', function () { resetRecordForm(); showScreen('home'); });
+function myName() { const me = members.find(m => m.uid === user.uid); return me ? (me.name || me.email || '') : (user.displayName || user.email || ''); }
+async function submitRecord() {
+  if (!canEdit()) return;
+  const rec = { iso: $('rec-date').value || isoToday(), cond: getSelText('condition-btns') || '普通', meal: getSelText('meal-btns') || '', med: getSelText('med-btns') || '', bpHi: $('vid-bphi').value.trim(), bpLo: $('vid-bplo').value.trim(), temp: $('vid-temp').value.trim(), pulse: $('vid-pulse').value.trim(), memo: $('memo').value.trim(), ts: Date.now(), by: myName(), uid: user.uid };
+  try {
+    await addDoc(collection(db, 'rooms', roomId, 'records'), rec);
+    const alerts = []; if (isHighBP(rec)) alerts.push('血圧が目安より高めです'); if (isFever(rec)) alerts.push('体温が目安より高めです');
+    openModal(alerts.length ? '⚠️' : '✅', '記録しました', fmtDate(rec.iso) + 'の様子を保存し、メンバーに共有されました。' + (alerts.length ? '<br><b style="color:var(--accent)">' + alerts.join('・') + '</b>' : ''), 'ホームに戻る', () => { resetRecordForm(); showScreen('home'); });
+  } catch (e) { toastErr(e, '保存できませんでした'); }
 }
-function resetRecordForm() {
-  document.querySelectorAll('#screen-record .vital-input').forEach(function (i) { i.value = ''; });
-  document.getElementById('memo').value = '';
-  document.getElementById('rec-date').value = isoToday();
-  setSel('condition-btns', '普通');
-  setSel('meal-btns', '');
-  setSel('med-btns', '');
-}
-function deleteRecord(i) {
-  openModal('🗑️', '記録を削除しますか？', escapeHtml(fmtDate(records[i].iso)) + 'の記録を削除します。', '削除する', function () {
-    records.splice(i, 1); lsSet(KEY_RECORDS, records); renderAll();
-  });
-}
+function resetRecordForm() { document.querySelectorAll('#screen-record .vital-input').forEach(i => i.value = ''); $('memo').value = ''; $('rec-date').value = isoToday(); setSel('condition-btns', '普通'); setSel('meal-btns', ''); setSel('med-btns', ''); }
+function deleteRecord(id) { const r = records.find(x => x.id === id); if (!r) return; openModal('🗑️', '記録を削除しますか？', escapeHtml(fmtDate(r.iso)) + 'の記録を削除します。', '削除する', async () => { try { await deleteDoc(doc(db, 'rooms', roomId, 'records', id)); } catch (e) { toastErr(e); } }, true); }
 
 // ===================== 受診レポート =====================
-function submitReport() {
-  var rp = {
-    iso: document.getElementById('rp-date').value || isoToday(),
-    dept: document.getElementById('rp-dept').value.trim() || (settings && settings.hospital) || '',
-    result: document.getElementById('rp-result').value.trim(),
-    order: document.getElementById('rp-order').value.trim(),
-    nextDate: document.getElementById('rp-next-date').value,
-    nextTime: document.getElementById('rp-next-time').value,
-    ts: Date.now()
-  };
+async function submitReport() {
+  if (!canEdit()) return;
+  const rp = { iso: $('rp-date').value || isoToday(), dept: $('rp-dept').value.trim() || room.hospital || '', result: $('rp-result').value.trim(), order: $('rp-order').value.trim(), nextDate: $('rp-next-date').value, nextTime: $('rp-next-time').value, ts: Date.now(), by: myName(), uid: user.uid };
   if (!rp.result && !rp.order && !rp.nextDate) { openModal('✏️', '内容を入力してください', '診察結果・指示内容・次回受診のいずれかを入力してください。'); return; }
-  reports.unshift(rp);
-  reports.sort(function (a, b) { return a.iso < b.iso ? 1 : a.iso > b.iso ? -1 : (b.ts || 0) - (a.ts || 0); });
-  lsSet(KEY_REPORTS, reports);
-  if (settings && document.getElementById('rp-update-next').checked && rp.nextDate) {
-    settings.visitDate = rp.nextDate; settings.visitTime = rp.nextTime;
-    if (rp.dept) settings.hospital = rp.dept;
-    lsSet(KEY_SETTINGS, settings);
-  }
-  ['rp-dept', 'rp-result', 'rp-order', 'rp-next-date', 'rp-next-time'].forEach(function (id) { document.getElementById(id).value = ''; });
-  document.getElementById('rp-date').value = isoToday();
-  renderAll(); renderReports();
-  openModal('✅', '受診結果を保存しました', rp.nextDate ? '次回受診：' + escapeHtml(fmtDate(rp.nextDate)) : '', '閉じる');
+  try {
+    await addDoc(collection(db, 'rooms', roomId, 'reports'), rp);
+    if ($('rp-update-next').checked && rp.nextDate) { const upd = { visitDate: rp.nextDate, visitTime: rp.nextTime }; if (rp.dept) upd.hospital = rp.dept; await updateDoc(doc(db, 'rooms', roomId), upd); }
+    ['rp-dept','rp-result','rp-order','rp-next-date','rp-next-time'].forEach(id => $(id).value = ''); $('rp-date').value = isoToday();
+    openModal('✅', '受診結果を保存しました', rp.nextDate ? '次回受診：' + escapeHtml(fmtDate(rp.nextDate)) : '');
+  } catch (e) { toastErr(e, '保存できませんでした'); }
 }
-function deleteReport(i) {
-  openModal('🗑️', 'レポートを削除しますか？', escapeHtml(fmtDate(reports[i].iso)) + 'の受診レポートを削除します。', '削除する', function () {
-    reports.splice(i, 1); lsSet(KEY_REPORTS, reports); renderReports();
-  });
-}
+function deleteReport(id) { const r = reports.find(x => x.id === id); if (!r) return; openModal('🗑️', 'レポートを削除しますか？', escapeHtml(fmtDate(r.iso)) + 'の受診レポートを削除します。', '削除する', async () => { try { await deleteDoc(doc(db, 'rooms', roomId, 'reports', id)); } catch (e) { toastErr(e); } }, true); }
 
 // ===================== 申し送りシート =====================
-var lastSheetText = '';
 function generateSheet() {
-  var days = +document.getElementById('sheet-days').value || 14;
-  var q = document.getElementById('sheet-q').value.trim();
-  var from = new Date(isoToday()); from.setDate(from.getDate() - days + 1);
-  var fromIso = from.getFullYear() + '-' + pad(from.getMonth() + 1) + '-' + pad(from.getDate());
-  var recs = records.filter(function (r) { return r.iso >= fromIso; }).slice().reverse(); // 古い順
-  var s = settings || {};
-  var lastRp = reports[0];
-
-  var html = '<div class="sheet">' +
-    '<h2>受診 申し送りシート</h2>' +
-    '<div class="meta">' +
-    '<b>' + escapeHtml(s.name || '') + ' さん</b>　作成日：' + escapeHtml(fmtDate(isoToday(), true)) + '<br>' +
-    '記録者：' + escapeHtml((s.writer || '') + (s.rel ? '（' + s.rel + '）' : '')) + '　受診先：' + escapeHtml(s.hospital || '') +
-    (s.visitDate ? '　受診日：' + escapeHtml(fmtDate(s.visitDate) + (s.visitTime ? ' ' + s.visitTime : '')) : '') +
-    '</div>';
-
+  const days = +$('sheet-days').value || 14; const q = $('sheet-q').value.trim();
+  const from = new Date(isoToday()); from.setDate(from.getDate() - days + 1);
+  const fromIso = from.getFullYear() + '-' + pad(from.getMonth()+1) + '-' + pad(from.getDate());
+  const recs = records.filter(r => r.iso >= fromIso).slice().reverse();
+  const s = room; const me = members.find(m => m.uid === user.uid) || {}; const lastRp = reports[0];
+  let html = `<div class="sheet"><h2>受診 申し送りシート</h2><div class="meta"><b>${escapeHtml(s.name)} さん</b>　作成日：${escapeHtml(fmtDate(isoToday(), true))}<br>記録者：${escapeHtml((me.name || '') + (me.rel ? '（' + me.rel + '）' : ''))}　受診先：${escapeHtml(s.hospital || '')}${s.visitDate ? '　受診日：' + escapeHtml(fmtDate(s.visitDate) + (s.visitTime ? ' ' + s.visitTime : '')) : ''}</div>`;
   if (s.meds) html += '<h3>現在のお薬・注意点</h3><div class="q">' + nl2br(s.meds) + '</div>';
   if (lastRp) html += '<h3>前回受診（' + escapeHtml(fmtDate(lastRp.iso)) + (lastRp.dept ? ' ' + escapeHtml(lastRp.dept) : '') + '）</h3><div class="q">' + nl2br([lastRp.result, lastRp.order].filter(Boolean).join('\n')) + '</div>';
-
-  html += '<h3>直近' + days + '日間のバイタル・生活状況（' + recs.length + '日分）</h3>';
+  html += `<h3>直近${days}日間のバイタル・生活状況（${recs.length}日分）</h3>`;
   if (!recs.length) html += '<div class="q">この期間の記録はありません。</div>';
   else {
-    html += '<table><tr><th>日付</th><th>体調</th><th>血圧</th><th>体温</th><th>脈</th><th>食事</th><th>服薬</th></tr>' +
-      recs.map(function (r) {
-        return '<tr><td>' + escapeHtml(fmtShort(r.iso)) + '</td><td>' + escapeHtml(r.cond || '') + '</td>' +
-          '<td' + (isHighBP(r) ? ' style="color:var(--accent);font-weight:700"' : '') + '>' + (r.bpHi ? escapeHtml(r.bpHi + '/' + (r.bpLo || '-')) : '') + '</td>' +
-          '<td' + (isFever(r) ? ' style="color:var(--accent);font-weight:700"' : '') + '>' + escapeHtml(r.temp || '') + '</td>' +
-          '<td>' + escapeHtml(r.pulse || '') + '</td><td>' + escapeHtml(r.meal || '') + '</td><td>' + escapeHtml(r.med || '') + '</td></tr>';
-      }).join('') + '</table>';
-    var memos = recs.filter(function (r) { return r.memo; });
-    if (memos.length) html += '<h3>気になったこと・メモ</h3>' + memos.map(function (r) { return '<div class="memo-item"><b>' + escapeHtml(fmtShort(r.iso)) + '</b>' + nl2br(r.memo) + '</div>'; }).join('');
+    html += '<table><tr><th>日付</th><th>体調</th><th>血圧</th><th>体温</th><th>脈</th><th>食事</th><th>服薬</th></tr>' + recs.map(r => `<tr><td>${escapeHtml(fmtShort(r.iso))}</td><td>${escapeHtml(r.cond || '')}</td><td${isHighBP(r) ? ' style="color:var(--accent);font-weight:700"' : ''}>${r.bpHi ? escapeHtml(r.bpHi + '/' + (r.bpLo || '-')) : ''}</td><td${isFever(r) ? ' style="color:var(--accent);font-weight:700"' : ''}>${escapeHtml(r.temp || '')}</td><td>${escapeHtml(r.pulse || '')}</td><td>${escapeHtml(r.meal || '')}</td><td>${escapeHtml(r.med || '')}</td></tr>`).join('') + '</table>';
+    const memos = recs.filter(r => r.memo);
+    if (memos.length) html += '<h3>気になったこと・メモ</h3>' + memos.map(r => `<div class="memo-item"><b>${escapeHtml(fmtShort(r.iso))}</b>${nl2br(r.memo)}</div>`).join('');
   }
   html += '<h3>先生に聞きたいこと</h3>' + (q ? '<div class="q">' + nl2br(q) + '</div>' : '<div class="blank"></div><div class="blank"></div>');
-  html += '<h3>先生からの説明（受診時に記入）</h3><div class="blank"></div><div class="blank"></div><div class="blank"></div>';
-  html += '</div>';
-  document.getElementById('sheet-area').innerHTML = html;
-
-  // テキスト版
-  var t = [];
-  t.push('【受診 申し送りシート】' + (s.name || '') + ' さん　作成日 ' + fmtDate(isoToday(), true));
-  t.push('記録者：' + (s.writer || '') + (s.rel ? '（' + s.rel + '）' : '') + '　受診先：' + (s.hospital || ''));
+  html += '<h3>先生からの説明（受診時に記入）</h3><div class="blank"></div><div class="blank"></div><div class="blank"></div></div>';
+  $('sheet-area').innerHTML = html;
+  const t = [`【受診 申し送りシート】${s.name} さん　作成日 ${fmtDate(isoToday(), true)}`, `記録者：${(me.name || '') + (me.rel ? '（' + me.rel + '）' : '')}　受診先：${s.hospital || ''}`];
   if (s.meds) t.push('■現在のお薬・注意点\n' + s.meds);
   if (lastRp) t.push('■前回受診（' + fmtDate(lastRp.iso) + '）\n' + [lastRp.result, lastRp.order].filter(Boolean).join('\n'));
-  t.push('■直近' + days + '日間の記録');
-  recs.forEach(function (r) {
-    var parts = [r.cond];
-    if (r.bpHi) parts.push('血圧' + r.bpHi + '/' + (r.bpLo || '-'));
-    if (r.temp) parts.push('体温' + r.temp);
-    if (r.pulse) parts.push('脈' + r.pulse);
-    if (r.meal) parts.push('食事' + r.meal);
-    if (r.med) parts.push('服薬' + r.med);
-    t.push(fmtShort(r.iso) + ' ' + parts.filter(Boolean).join(' ') + (r.memo ? '\n　' + r.memo.replace(/\n/g, '\n　') : ''));
-  });
+  t.push(`■直近${days}日間の記録`);
+  recs.forEach(r => { const p = [r.cond]; if (r.bpHi) p.push('血圧' + r.bpHi + '/' + (r.bpLo || '-')); if (r.temp) p.push('体温' + r.temp); if (r.pulse) p.push('脈' + r.pulse); if (r.meal) p.push('食事' + r.meal); if (r.med) p.push('服薬' + r.med); t.push(fmtShort(r.iso) + ' ' + p.filter(Boolean).join(' ') + (r.memo ? '\n　' + r.memo.replace(/\n/g, '\n　') : '')); });
   if (q) t.push('■先生に聞きたいこと\n' + q);
   lastSheetText = t.join('\n');
   showScreen('sheet');
 }
 function shareSheetText() { shareText(lastSheetText, '申し送りシート'); }
-function shareText(text, title) {
-  if (navigator.share) {
-    navigator.share({ title: title, text: text }).catch(function () { copyText(text); });
-  } else copyText(text);
-}
+function shareText(text, title) { if (navigator.share) navigator.share({ title, text }).catch(() => copyText(text)); else copyText(text); }
 function copyText(text) {
-  var done = function () { openModal('📋', 'コピーしました', 'LINEやメールに貼り付けて送れます。'); };
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
-  else fallbackCopy(text, done);
+  const done = () => openModal('📋', 'コピーしました', 'LINEやメールに貼り付けて送れます。');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done)); else fallbackCopy(text, done);
 }
-function fallbackCopy(text, done) {
-  var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-  document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); done(); } catch (e) { openModal('📋', 'コピーできませんでした', '<textarea class="input-field" rows="6" style="font-size:11px">' + escapeHtml(text) + '</textarea>'); }
-  document.body.removeChild(ta);
+function fallbackCopy(text, done) { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) { openModal('📋', 'コピーできませんでした', '<textarea class="input-field" rows="6" style="font-size:11px">' + escapeHtml(text) + '</textarea>'); } document.body.removeChild(ta); }
+
+// ===================== 旧データ（v1.x 端末内保存）の取り込み =====================
+function legacyData() { try { return { records: JSON.parse(localStorage.getItem('osoboni_records') || '[]'), reports: JSON.parse(localStorage.getItem('osoboni_reports') || '[]') }; } catch (e) { return { records: [], reports: [] }; } }
+function checkLegacy() {
+  const l = legacyData(); const n = l.records.length + l.reports.length;
+  const info = $('legacy-info'), btn = $('legacy-btn'); if (!info) return;
+  if (!n || !canEdit()) { info.textContent = n ? '旧データがありますが、取り込みには記録権限が必要です' : 'なし'; btn.style.display = 'none'; return; }
+  info.textContent = `以前のバージョンで保存した記録 ${l.records.length} 件・受診レポート ${l.reports.length} 件があります。`; btn.style.display = 'flex';
+  if (!sessionStorage.getItem('legacy_asked')) { sessionStorage.setItem('legacy_asked', '1'); openModal('📦', '以前の記録が見つかりました', `この端末に、以前のバージョンで保存した記録が ${n} 件あります。${escapeHtml(room.name)}さんの記録として取り込みますか？`, '取り込む', importLegacy, true); }
+}
+async function importLegacy() {
+  const l = legacyData(); if (!canEdit()) return;
+  try {
+    for (const r of l.records) { const { id, ...rest } = r; await addDoc(collection(db, 'rooms', roomId, 'records'), { ...rest, iso: rest.iso || isoToday(), ts: rest.ts || Date.now(), by: rest.by || myName(), uid: user.uid, imported: true }); }
+    for (const r of l.reports) { const { id, ...rest } = r; await addDoc(collection(db, 'rooms', roomId, 'reports'), { ...rest, iso: rest.iso || isoToday(), ts: rest.ts || Date.now(), by: rest.by || myName(), uid: user.uid, imported: true }); }
+    localStorage.removeItem('osoboni_records'); localStorage.removeItem('osoboni_reports'); localStorage.removeItem('osoboni_settings');
+    checkLegacy(); openModal('✅', '取り込みました', `記録 ${l.records.length} 件・受診レポート ${l.reports.length} 件を取り込みました。`);
+  } catch (e) { toastErr(e, '取り込みに失敗しました'); }
 }
 
-// ===================== バックアップ =====================
-function exportData() {
-  var payload = { app: 'osoboni', version: 1, exportedAt: new Date().toISOString(), settings: settings, records: records, reports: reports };
-  shareText('OSOBONI-BACKUP:' + JSON.stringify(payload), 'おそばに バックアップ');
-}
-function importData() {
-  var raw = document.getElementById('import-text').value.trim();
-  var m = raw.match(/OSOBONI-BACKUP:(\{[\s\S]*\})/);
-  var data = null;
-  try { data = JSON.parse(m ? m[1] : raw); } catch (e) {}
-  if (!data || data.app !== 'osoboni') { openModal('❌', '読み込めませんでした', '書き出したテキストをそのまま貼り付けてください。'); return; }
-  var key = function (r) { return r.iso + '|' + (r.ts || '') + '|' + (r.memo || r.result || ''); };
-  var seen = {};
-  records.concat(data.records || []).forEach(function (r) { seen[key(r)] = r; });
-  records = Object.keys(seen).map(function (k) { return seen[k]; }).sort(function (a, b) { return a.iso < b.iso ? 1 : a.iso > b.iso ? -1 : (b.ts || 0) - (a.ts || 0); });
-  var seen2 = {};
-  reports.concat(data.reports || []).forEach(function (r) { seen2[key(r)] = r; });
-  reports = Object.keys(seen2).map(function (k) { return seen2[k]; }).sort(function (a, b) { return a.iso < b.iso ? 1 : -1; });
-  if (!settings && data.settings) settings = data.settings;
-  lsSet(KEY_RECORDS, records); lsSet(KEY_REPORTS, reports); if (settings) lsSet(KEY_SETTINGS, settings);
-  document.getElementById('import-text').value = '';
-  renderAll(); renderDataStats();
-  openModal('✅', '読み込みました', '日々の記録 ' + records.length + ' 件、受診レポート ' + reports.length + ' 件になりました。');
-}
+// ===================== オンライン表示・SW =====================
+function updateSync() { const on = navigator.onLine; $('sync-dot').className = 'sync-dot' + (on ? '' : ' off'); $('sync-text').textContent = on ? 'クラウドと同期中' : 'オフライン（再接続時に自動同期）'; }
+window.addEventListener('online', updateSync); window.addEventListener('offline', updateSync); updateSync();
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 
-// ===================== 初期化 =====================
-renderAll();
-if (!settings) openSetup(false); else showScreen('home');
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js').catch(function () {});
-  });
-}
+Object.assign(window, { showScreen, selectCondition, selectSingle, closeModal, cancelModal, loginGoogle, loginEmail, signupEmail, resetPass, logout, selectRoom, openSetup, cancelSetup, saveSetup, saveThresholds, createInvite, joinRoom, removeMember, leaveRoom, submitRecord, deleteRecord, submitReport, deleteReport, generateSheet, shareSheetText, shareText, importLegacy });
 </script>
-</div>
 </body>
 </html>
